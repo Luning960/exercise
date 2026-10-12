@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>费用报销内控风险扫描仪</title>
+<style>
+/* ============ 基础与重置 ============ */
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#F5F7FA;color:#2A3440;font:14px/1.6 Arial,"Microsoft YaHei","微软雅黑","PingFang SC","Hiragino Sans GB",sans-serif}
+button{font-family:inherit}
+
+/* ============ 顶部导航 ============ */
+.nav{background:#fff;border-bottom:1px solid #E4E9F0;position:sticky;top:0;z-index:20}
+.nav-inner{max-width:900px;margin:0 auto;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.nav-title{font-size:18px;font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:9px}
+.logo-dot{width:10px;height:10px;border-radius:50%;background:#E53935;box-shadow:0 0 0 3px rgba(229,57,53,.15);flex:none}
+
+/* ============ 布局容器与卡片 ============ */
+.container{max-width:900px;margin:26px auto 64px;padding:0 16px}
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(35,49,68,.08);padding:22px 24px;margin-bottom:18px}
+.card-title{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;margin:0 0 18px;flex-wrap:wrap}
+.card-title::before{content:"";display:inline-block;width:4px;height:16px;border-radius:2px;background:#E53935;flex:none}
+.title-right{margin-left:auto;font-weight:400;font-size:12.5px;color:#8A94A6;display:flex;align-items:center;gap:8px}
+.total-num{color:#E53935;font-size:15px}
+
+/* ============ 表单 ============ */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px}
+.field label{display:block;font-size:13px;color:#5A6675;margin-bottom:6px}
+.req{color:#E53935;margin-right:2px}
+.field input,.field select{width:100%;height:36px;padding:0 10px;border:1px solid #D5DCE6;border-radius:6px;background:#fff;font:inherit;color:#2A3440;outline:none;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus{border-color:#E53935;box-shadow:0 0 0 3px rgba(229,57,53,.08)}
+.city-row,.date-row{display:flex;gap:8px;align-items:center}
+.city-row select,.date-row input{flex:1;min-width:0}
+.date-row .sep{color:#8A94A6;flex:none}
+.hint{font-size:12px;color:#9AA4B2;margin-top:5px}
+
+/* ============ 按钮 ============ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:6px;padding:8px 18px;font-size:13.5px;cursor:pointer;transition:background .15s,border-color .15s,color .15s;user-select:none}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#E53935;color:#fff}
+.btn-primary:hover:not(:disabled){background:#C62828}
+.btn-ghost{background:#fff;border-color:#D5DCE6;color:#5A6675}
+.btn-ghost:hover:not(:disabled){background:#F0F3F8;border-color:#C0C9D6}
+.btn-del{background:#fff;border-color:#F3C1BD;color:#E53935}
+.btn-del:hover:not(:disabled){background:#FFF1F0;border-color:#E53935}
+.btn-mini{padding:3px 10px;font-size:12px}
+.btn-scan{padding:10px 36px;font-size:15px;font-weight:600}
+
+/* ============ 明细录入表格 ============ */
+.table-wrap{overflow-x:auto;border:1px solid #E4E9F0;border-radius:8px}
+table.dtbl,table.rtbl{width:100%;border-collapse:collapse;background:#fff}
+table.dtbl{min-width:980px}
+table.dtbl th,table.rtbl th{background:#F5F7FA;color:#5A6675;font-size:12.5px;font-weight:600;text-align:left;padding:9px 12px;border-bottom:1px solid #E4E9F0;white-space:nowrap}
+table.dtbl td,table.rtbl td{padding:10px 12px;border-bottom:1px solid #EEF2F6;vertical-align:top;font-size:13px}
+table.dtbl tbody tr:last-child td,table.rtbl tbody tr:last-child td{border-bottom:none}
+table.dtbl tbody tr:nth-child(even){background:#FAFBFD} /* 斑马纹（明细表） */
+.t-input{height:32px;padding:0 8px;border:1px solid #D5DCE6;border-radius:6px;font:inherit;font-size:13px;color:#2A3440;background:#fff;outline:none}
+.t-input:focus{border-color:#E53935}
+.t-input[readonly]{background:#F5F7FA;color:#4A5563} /* 自动计算只读态 */
+.w-date{width:142px}.w-num{width:106px}.w-sel{width:96px}.w-city{width:126px}
+.city-stack{display:flex;flex-direction:column;gap:6px}
+.cell-sub{min-width:225px}
+.subfields{display:flex;flex-direction:column;gap:6px}
+.sf{display:flex;align-items:center;gap:7px}
+.sf label{font-size:12px;color:#5A6675;white-space:nowrap}
+.sf-int-err{color:#E53935;font-size:11.5px;line-height:1.4;margin-top:2px} /* 计数类字段修正提示 */
+.cell-sub.off .sub-off{color:#9AA4B2;font-size:12px;background:#F5F7FA;border:1px dashed #D5DCE6;border-radius:6px;padding:8px 10px}
+.amount-cell{display:flex;flex-direction:column;gap:6px}
+.amount-mode .mode-hint{font-size:11.5px;color:#9AA4B2}
+.remark-wrap{display:flex;flex-direction:column;gap:5px}
+.remark-lbl{font-size:12px;color:#5A6675;white-space:nowrap}
+.req-star{color:#E53935;font-weight:700;margin-right:2px}
+.r-remark{width:172px}
+.r-remark.required{border-color:#FF9800;background:#FFFDF5}
+.remark-err{color:#E53935;font-size:11.5px;line-height:1.4;max-width:172px}
+.add-row{margin-top:14px}
+.scan-area{margin-top:18px;padding-top:16px;border-top:1px dashed #E4E9F0}
+.scan-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.loading-box{display:flex;align-items:center;gap:9px;color:#8A94A6;font-size:13px}
+.spinner{width:20px;height:20px;border-radius:50%;border:3px solid #E6EAF0;border-top-color:#E53935;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ============ 提示条 ============ */
+.alert-bar{background:#FFF1F0;border:1px solid #FFCDD2;color:#B03A36;border-radius:8px;padding:11px 15px;margin-bottom:14px;font-size:13px}
+.alert-bar ul{margin:5px 0 0;padding-left:18px}
+.soft-bar{background:#FFF8E1;border:1px solid #FFE082;color:#8A6D1D;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:12.5px}
+
+/* ============ 扫描结果 ============ */
+.result-summary{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:4px 0 18px;border-bottom:1px dashed #E4E9F0;margin-bottom:14px}
+.lvl-icon{border-radius:50%;display:inline-block;vertical-align:middle}
+.rs-main .rs-score{font-size:14px;color:#5A6675}
+.rs-score b{font-size:34px;color:#2A3440;margin:0 3px}
+.rs-unit{font-size:12px;color:#9AA4B2}
+.rs-level{font-size:16px;font-weight:700;margin-top:2px}
+.rs-level.low{color:#2E7D32}.rs-level.med{color:#B07C00}.rs-level.high{color:#C62828}
+.rs-stats{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+.stat-chip{border-radius:8px;padding:7px 13px;font-size:12.5px;background:#F5F7FA;color:#5A6675}
+.stat-chip b{font-size:15px;margin:0 1px}
+.stat-chip.h{background:#FFF1F0;color:#B03A36}.stat-chip.m{background:#FFF8E1;color:#8A6D1D}.stat-chip.l{background:#E8F5E9;color:#2E7D32}
+table.rtbl{min-width:760px}
+table.rtbl td{vertical-align:middle}
+table.rtbl tbody tr.row-high{background:#FFF1F0;color:#9E2B26}
+table.rtbl tbody tr.row-med{background:#FFF8E1;color:#7A5E14}
+table.rtbl tbody tr.row-zebra{background:#FAFBFD} /* 斑马纹（结果表低风险行） */
+.cell-risk{white-space:nowrap}
+.cell-risk svg{margin-right:6px;vertical-align:-4px}
+.dim{color:#B7C0CC}
+.soft-tag{color:#8A6D1D;background:#FFF3CD;border-radius:4px;padding:1px 6px;font-size:12px}
+.result-wrap{overflow-x:auto;border:1px solid #E4E9F0;border-radius:8px}
+
+/* ============ 历史记录 ============ */
+.history-actions{display:flex;gap:8px}
+.history-empty{color:#9AA4B2;font-size:13px;padding:6px 2px}
+.history-item{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 4px;border-bottom:1px dashed #E4E9F0;font-size:13px;color:#4A5563}
+.history-item:last-child{border-bottom:none}
+.h-score b{font-size:16px}
+.h-score b.low{color:#2E7D32}.h-score b.med{color:#B07C00}.h-score b.high{color:#C62828}
+.h-time{color:#9AA4B2;font-size:12.5px}
+.h-total{font-weight:600}
+
+/* ============ 弹窗 ============ */
+.overlay{position:fixed;inset:0;background:rgba(17,24,32,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.28);width:min(470px,94vw);max-height:82vh;overflow:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #E4E9F0}
+.modal-head h3{margin:0;font-size:15.5px}
+.modal-close{border:none;background:none;font-size:22px;line-height:1;color:#8A94A6;cursor:pointer;padding:2px 7px;border-radius:6px}
+.modal-close:hover{background:#F0F3F8;color:#2A3440}
+.modal-body{padding:16px 20px;font-size:13.5px;color:#3A4552}
+.modal-body p{margin:0 0 8px}
+.modal-body ul{margin:8px 0 0;padding-left:18px}
+.modal-body li{margin-bottom:4px}
+.modal-foot{padding:12px 20px 18px;display:flex;justify-content:flex-end;gap:10px}
+
+footer.page-foot{max-width:900px;margin:0 auto 40px;padding:0 16px;text-align:center;color:#AAB4C2;font-size:12px}
+
+/* ============ 响应式 ============ */
+@media (max-width:720px){
+  .grid2{grid-template-columns:1fr}
+  .rs-stats{margin-left:0}
+  .nav-inner{padding:12px 16px}
+  .nav-title{font-size:16px}
+  .card{padding:16px}
+  .r-remark{width:150px}
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部导航：页面标题 + 产品说明 -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-title"><span class="logo-dot"></span>报销风险扫描小站</div>
+    <button class="btn btn-ghost" id="btnIntro" type="button">产品说明</button>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- ============ 基础信息 ============ -->
+  <section class="card">
+    <h2 class="card-title">基础信息</h2>
+    <div class="grid2">
+      <div class="field">
+        <label><span class="req">*</span>报销人姓名</label>
+        <input id="fName" type="text" maxlength="20" placeholder="请输入姓名">
+      </div>
+      <div class="field">
+        <label><span class="req">*</span>岗位角色</label>
+        <select id="fRole">
+          <option value="">请选择岗位</option>
+          <option value="技术">技术</option>
+          <option value="销售">销售</option>
+          <option value="职能">职能</option>
+        </select>
+      </div>
+      <div class="field">
+        <label><span class="req">*</span>出差城市</label>
+        <div class="city-row">
+          <select id="tripProv" title="省份"><option value="">省份</option></select>
+          <select id="tripCity" title="城市"><option value="">城市</option></select>
+          <select id="tripDist" title="区县(选填)"><option value="">区县(选填)</option></select>
+        </div>
+        <div class="hint">省、市必填，区县选填</div>
+      </div>
+      <div class="field">
+        <label><span class="req">*</span>出差日期</label>
+        <div class="date-row">
+          <input id="tripStart" type="date"><span class="sep">至</span><input id="tripEnd" type="date">
+        </div>
+        <div class="hint">明细消费日期将锁定在出差区间内</div>
+      </div>
+      <div class="field">
+        <label>本月累计报销额</label>
+        <input id="fMonth" type="number" min="0" step="0.01" placeholder="选填，留空自动取明细总额">
+        <div class="hint">选填；留空时按明细总额参与历史偏离判断</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 明细录入 ============ -->
+  <section class="card">
+    <h2 class="card-title">明细录入<span class="title-right">明细总额：<b class="total-num" id="detailTotal">¥0</b></span></h2>
+    <div class="table-wrap">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th>金额</th>
+            <th>项目类型</th>
+            <th>消费城市</th>
+            <th>详细信息</th>
+            <th>备注</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="detailTbody"><!-- 明细行动态渲染 --></tbody>
+      </table>
+    </div>
+    <div class="add-row"><button class="btn btn-ghost" id="btnAdd" type="button">+ 添加条目</button></div>
+
+    <!-- 操作区：校验红条 + 开始扫描 + 加载动画 -->
+    <div class="scan-area">
+      <div id="alertBar" class="alert-bar" hidden></div>
+      <div class="scan-row">
+        <button class="btn btn-primary btn-scan" id="btnScan" type="button">开始扫描</button>
+        <div id="loadingBox" class="loading-box" hidden><span class="spinner"></span>AI风控扫描中...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 扫描结果 ============ -->
+  <section class="card" id="cardResult" hidden>
+    <h2 class="card-title">扫描结果<span class="title-right" id="resultTime"></span></h2>
+    <div id="resultBody"></div>
+  </section>
+
+  <!-- ============ 历史记录（localStorage） ============ -->
+  <section class="card">
+    <h2 class="card-title">历史记录
+      <span class="title-right history-actions">
+        <button class="btn btn-mini btn-ghost" id="btnToggleHist" type="button">展开</button>
+        <button class="btn btn-mini btn-del" id="btnClearHist" type="button">清空历史</button>
+      </span>
+    </h2>
+    <div id="historyBody" hidden></div>
+  </section>
+
+</div>
+
+<footer class="page-foot">数据仅保存在本地浏览器 localStorage · 风控建议仅供参考</footer>
+
+<!-- ============ 通用弹窗 ============ -->
+<div class="overlay" id="overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head"><h3 id="modalTitle">提示</h3><button class="modal-close" id="modalClose" type="button" aria-label="关闭">×</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================================================================
+ * 费用报销内控风险扫描仪（单文件版）
+ * - 无后端、不调用外部 API；历史数据存 localStorage
+ * - 防御性编程：所有外部输入（金额/日期/城市）在扫描前统一拦截校验
+ * ================================================================ */
+
+/* ---------------- 内置常量 ---------------- */
+// 各类目费用标准（standard=标准上限，high=审批上限）
+const STANDARD_LIMITS = {
+  住宿: { standard: 500, high: 800 },
+  餐饮: {
+    '早中晚工作餐': { standard: 50, high: 100 },
+    '员工聚餐': { standard: 80, high: 150 },
+    '招待客户': { standard: 150, high: 300 }
+  },
+  交通: {
+    '飞机': { standard: 1500, high: 2500 },
+    '高铁': { standard: 800, high: 1200 },
+    '打车': { standard: 80, high: 200 }
+  },
+  娱乐: { standard: 250, high: 400 },
+  办公: { standard: 400, high: 1200 }, // 超标准→升级部门负责人审批复核；超high→建议走专项采购流程
+  其他: { standard: 3000, high: 5000 }
+};
+
+// 精简版省市区数据（约50条，用于省市比对与三级联动）
+const REGION_DATA = {
+  '北京市': { '北京市': ['东城区', '朝阳区', '海淀区'] },
+  '上海市': { '上海市': ['黄浦区', '浦东新区'] },
+  '广东省': { '广州市': ['天河区', '越秀区'], '深圳市': ['南山区', '福田区'] },
+  '浙江省': { '杭州市': ['西湖区', '滨江区'], '宁波市': ['海曙区'] },
+  '江苏省': { '南京市': ['玄武区', '鼓楼区'], '苏州市': ['姑苏区'] },
+  '四川省': { '成都市': ['锦江区', '武侯区'] },
+  '湖北省': { '武汉市': ['江汉区', '武昌区'] },
+  '湖南省': { '长沙市': ['岳麓区'] },
+  '陕西省': { '西安市': ['雁塔区', '碑林区'] },
+  '山东省': { '济南市': ['历下区'], '青岛市': ['市南区'] },
+  '福建省': { '福州市': ['鼓楼区'], '厦门市': ['思明区'] },
+  '河南省': { '郑州市': ['金水区'] }
+};
+
+// 法定节假日区间（简化维护表：周末由 getDay 判定，此处只列法定假日；可按国务院公告自行维护）
+const HOLIDAY_RANGES = [
+  ['2025-01-01', '2025-01-01'], // 元旦
+  ['2025-01-28', '2025-02-04'], // 春节
+  ['2025-04-04', '2025-04-06'], // 清明
+  ['2025-05-01', '2025-05-05'], // 劳动节
+  ['2025-05-31', '2025-06-02'], // 端午
+  ['2025-10-01', '2025-10-08'], // 国庆·中秋
+  ['2026-01-01', '2026-01-03'], // 元旦
+  ['2026-02-15', '2026-02-22'], // 春节（示例区间，可按公告维护）
+  ['2026-04-04', '2026-04-06'], // 清明
+  ['2026-05-01', '2026-05-05'], // 劳动节
+  ['2026-06-19', '2026-06-21'], // 端午
+  ['2026-09-25', '2026-09-27'], // 中秋
+  ['2026-10-01', '2026-10-08']  // 国庆
+];
+
+const SENSITIVE_WORDS = ['KTV', '酒吧', '礼品']; // 备注敏感词
+const MERCHANT_TYPES = ['餐饮', '住宿', '交通', '娱乐', '办公']; // 明细行项目类型选项（“其他”已下线）
+const DINING_SUBS = ['早中晚工作餐', '员工聚餐', '招待客户'];
+const TRANSIT_SUBS = ['飞机', '高铁', '打车'];
+const OFFICE_SUBS = [ // 办公二级子分类（仅业务分类展示，不参与打分）
+  '低值耗材文具（纸笔、硒鼓、键盘鼠标等小件耗材）',
+  '邮寄&打印服务费（快递、标书、装订打印）',
+  '小型办公杂项（U盘、饮用水、绿植、简易设备维修）'
+];
+
+// 岗位-消费概念常规范围（用于“角色不匹配”判定）
+const ROLE_SCOPE = {
+  '技术': ['办公', '云服', '会议'],
+  '销售': ['招待', '差旅', '交通'],
+  '职能': ['培训', '团建', '快递']
+};
+
+// 风险等级文案
+const LEVEL_META = {
+  低: { label: '低风险 - 自动通过', cls: 'low' },
+  中: { label: '中风险 - 人工复核', cls: 'med' },
+  高: { label: '高风险 - 拦截', cls: 'high' }
+};
+
+// localStorage 键
+const LS_POOL = 'reimburse_total_pool';   // 历次扫描金额+时间（用于历史均值）
+const LS_HIST = 'reimburse_history';      // 全部扫描记录（历史折叠区展示）
+
+/* ---------------- 全局状态 ---------------- */
+let rows = [];        // 明细行状态数组（amountManual 布尔变量切换两套打分路径）
+let rowSeq = 0;       // 行自增 id
+let historyOpen = false; // 历史折叠区展开状态
+
+/* ---------------- 通用工具 ---------------- */
+const $ = (sel, p) => (p || document).querySelector(sel);
+const $$ = (sel, p) => Array.prototype.slice.call((p || document).querySelectorAll(sel));
+
+function num(v) { const n = parseFloat(v); return Number.isFinite(n) ? n : null; }
+function round2(v) { return Math.round(v * 100) / 100; }
+function fmtMoney(v) { return Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 2 }); }
+function pad2(n) { return String(n).padStart(2, '0'); }
+function fmtDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function todayStr() { return fmtDate(new Date()); }
+function fmtDateTime(d) { return fmtDate(d) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+function dedupe(arr) { return Array.from(new Set(arr)); }
+
+// localStorage 安全读写（隐私模式等异常时静默降级）
+function lsGet(key, def) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+  catch (e) { return def; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* 忽略 */ }
+}
+
+// 反查城市所属省份（每行保存省份用于校验）
+function provinceOfCity(city) {
+  if (!city) return '';
+  for (const p in REGION_DATA) {
+    if (REGION_DATA[p][city]) return p;
+  }
+  return '';
+}
+function isWeekend(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const w = d.getDay();
+  return w === 0 || w === 6;
+}
+function inHoliday(dateStr) {
+  return HOLIDAY_RANGES.some(r => dateStr >= r[0] && dateStr <= r[1]);
+}
+function isWeekendOrHoliday(dateStr) { return isWeekend(dateStr) || inHoliday(dateStr); }
+function hasSensitiveWord(remark) {
+  const s = String(remark || '');
+  return SENSITIVE_WORDS.some(w => s.indexOf(w) > -1);
+}
+
+// 三色风险等级图标（内联SVG：绿勾 / 黄感叹 / 红感叹）
+function levelIcon(level, size) {
+  const s = size || 20;
+  const glyphs = {
+    低: '<path d="M14 24.8l7.2 7.2L34 17" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>',
+    中: '<rect x="21.4" y="11" width="5.2" height="17" rx="2.6" fill="#fff"/><circle cx="24" cy="35.5" r="3.2" fill="#fff"/>',
+    高: '<rect x="21.4" y="11" width="5.2" height="17" rx="2.6" fill="#fff"/><circle cx="24" cy="35.5" r="3.2" fill="#fff"/>'
+  };
+  const colors = { 低: '#4CAF50', 中: '#FFB300', 高: '#E53935' };
+  return '<svg class="lvl-icon" width="' + s + '" height="' + s + '" viewBox="0 0 48 48" aria-hidden="true">' +
+    '<circle cx="24" cy="24" r="22" fill="' + (colors[level] || colors.低) + '"/>' + (glyphs[level] || glyphs.低) + '</svg>';
+}
+
+/* ================================================================
+ * 表单初始化
+ * ================================================================ */
+function initForm() {
+  const today = todayStr();
+  // 初始化读取今日日期，设置全部日期控件 max
+  $('#tripStart').max = today;
+  $('#tripEnd').max = today;
+
+  // 出差省份选项
+  $('#tripProv').innerHTML = '<option value="">省份</option>' +
+    Object.keys(REGION_DATA).map(p => '<option value="' + p + '">' + p + '</option>').join('');
+
+  // 基础信息联动
+  $('#tripProv').addEventListener('change', () => {
+    fillTripCities();
+    rows.forEach(refreshCitySelect); // 明细城市下拉跟随出差省份过滤
+  });
+  $('#tripCity').addEventListener('change', fillTripDistricts);
+  $('#tripStart').addEventListener('change', bindRowDateRanges);
+  $('#tripEnd').addEventListener('change', bindRowDateRanges);
+
+  // 操作按钮
+  $('#btnAdd').addEventListener('click', addRow);
+  $('#btnScan').addEventListener('click', scanRisk);
+  $('#btnIntro').addEventListener('click', showIntroModal);
+  $('#btnToggleHist').addEventListener('click', toggleHistory);
+  $('#btnClearHist').addEventListener('click', confirmClearHistory);
+
+  // 弹窗：点遮罩关闭、关闭按钮可用
+  $('#overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+  $('#modalClose').addEventListener('click', closeModal);
+
+  // 明细行事件委托（input/change/focusout/click 全部委托到 tbody）
+  const tbody = $('#detailTbody');
+  tbody.addEventListener('input', onRowInput);
+  tbody.addEventListener('change', onRowInput);
+  tbody.addEventListener('focusout', onRowBlur);
+  tbody.addEventListener('click', onRowClick);
+  tbody.addEventListener('keydown', onRowKeydown); // 计数类输入框：按键层拦截小数点/负号/指数符
+
+  addRow();          // 初始1条明细
+  renderHistory();   // 读取 localStorage 渲染历史
+}
+
+/* ---------------- 出差城市三级联动 ---------------- */
+function fillTripCities() {
+  const prov = $('#tripProv').value;
+  $('#tripCity').innerHTML = '<option value="">城市</option>' +
+    (prov ? Object.keys(REGION_DATA[prov]).map(c => '<option value="' + c + '">' + c + '</option>').join('') : '');
+  $('#tripDist').innerHTML = '<option value="">区县(选填)</option>';
+}
+function fillTripDistricts() {
+  const prov = $('#tripProv').value, city = $('#tripCity').value;
+  const dists = (prov && city && REGION_DATA[prov][city]) || [];
+  $('#tripDist').innerHTML = '<option value="">区县(选填)</option>' +
+    dists.map(d => '<option value="' + d + '">' + d + '</option>').join('');
+}
+
+/* ---------------- 明细日期边界（锁定在出差起止区间内且 ≤ 今日） ---------------- */
+function rowDateBounds() {
+  const today = todayStr();
+  const start = $('#tripStart') ? $('#tripStart').value : '';
+  const end = $('#tripEnd') ? $('#tripEnd').value : '';
+  const max = end ? (end < today ? end : today) : today;
+  return { min: start || '', max: max };
+}
+function bindRowDateRanges() {
+  const b = rowDateBounds();
+  $$('#detailTbody .r-date').forEach(inp => { inp.min = b.min; inp.max = b.max; });
+}
+
+/* ================================================================
+ * 明细行：构建 / 渲染 / 交互
+ * ================================================================ */
+function addRow() {
+  rows.push({
+    id: ++rowSeq,
+    date: '',
+    type: '餐饮',
+    amountManual: false,     // 金额互斥开关：false=自动计算，true=手填覆盖
+    manualAmount: '',
+    sub: { subType: '' },    // 动态子字段值
+    city: '',
+    district: '',
+    province: '',            // 每行保存省份用于校验
+    remark: '',
+    remarkRequired: false,
+    lastDiningSub: '',       // 手填覆盖前记住的餐饮子类型（评分降级用）
+    typeTouched: false
+  });
+  renderRows();
+}
+
+function removeRow(id) {
+  if (rows.length <= 1) return; // 至少保留1条
+  rows = rows.filter(r => r.id !== id);
+  renderRows();
+}
+
+function rowEl(id) { return document.querySelector('#detailTbody tr[data-id="' + id + '"]'); }
+
+// 全量重建 tbody（仅在新增/删除行时调用）
+function renderRows() {
+  const b = rowDateBounds();
+  $('#detailTbody').innerHTML = rows.map(row => {
+    const del = rows.length <= 1 ? ' disabled' : '';
+    return '<tr data-id="' + row.id + '">' +
+      '<td><input type="date" class="t-input w-date r-date" value="' + (row.date || '') + '" min="' + b.min + '" max="' + b.max + '"></td>' +
+      '<td><div class="amount-cell">' +
+        '<input type="number" class="t-input w-num r-amount" min="0" step="0.01" placeholder="自动计算">' +
+        '<div class="amount-mode"></div>' +
+      '</div></td>' +
+      '<td><select class="t-input w-sel r-type">' +
+        MERCHANT_TYPES.map(t => '<option value="' + t + '"' + (row.type === t ? ' selected' : '') + '>' + t + '</option>').join('') +
+      '</select></td>' +
+      '<td><div class="city-stack">' +
+        '<select class="t-input w-city r-city"></select>' +
+        '<select class="t-input w-city r-dist"></select>' +
+      '</div></td>' +
+      '<td class="cell-sub"></td>' +
+      '<td><div class="remark-wrap">' +
+        '<div class="remark-lbl"><span class="req-star">*</span>备注</div>' +
+        '<input type="text" class="t-input r-remark" maxlength="60" placeholder="请填写消费说明（金额>500必填）" value="' + esc(row.remark) + '">' +
+        '<div class="remark-err"></div>' +
+      '</div></td>' +
+      '<td><button class="btn btn-mini btn-del r-del" type="button"' + del + '>删除</button></td>' +
+    '</tr>';
+  }).join('');
+  rows.forEach(row => {
+    refreshCitySelect(row);
+    renderDynamicFields(row.id);
+    updateRemarkRequirement(row.id);
+  });
+  updateTotals();
+}
+
+/* 消费城市联动：已选出差省份时仅展示本省城市；未选时给出提示 */
+function refreshCitySelect(row) {
+  const tr = rowEl(row.id); if (!tr) return;
+  const citySel = tr.querySelector('.r-city');
+  const distSel = tr.querySelector('.r-dist');
+  const tripProv = $('#tripProv').value;
+  if (!tripProv) {
+    citySel.innerHTML = '<option value="" selected>请先在基础信息选择出差城市</option>';
+    citySel.disabled = true;
+    distSel.innerHTML = '<option value="">区县(选填)</option>';
+    distSel.disabled = true;
+    return;
+  }
+  citySel.disabled = false; distSel.disabled = false;
+  const cities = Object.keys(REGION_DATA[tripProv] || {});
+  let html = '<option value="">选择城市</option>' +
+    cities.map(c => '<option value="' + c + '"' + (row.city === c ? ' selected' : '') + '>' + c + '</option>').join('');
+  // 防御性保留：已选城市不在当前出差省时保留选项（标记跨省），供跨省校验路径触达
+  if (row.city && cities.indexOf(row.city) === -1) {
+    html = '<option value="' + esc(row.city) + '" selected>' + esc(row.city) + '（跨省）</option>' + html;
+  }
+  citySel.innerHTML = html;
+  // 区县选项跟随本行已选城市
+  const prov = provinceOfCity(row.city);
+  const dists = (prov && REGION_DATA[prov] && REGION_DATA[prov][row.city]) || [];
+  distSel.innerHTML = '<option value="">区县(选填)</option>' +
+    dists.map(d => '<option value="' + d + '"' + (row.district === d ? ' selected' : '') + '>' + d + '</option>').join('');
+}
+
+/* 动态子字段 HTML（按商户类型展开） */
+function subfieldsHTML(row) {
+  const s = row.sub || {};
+  // isInt=true 为计数类字段（晚数/人数/数量）：正整数约束 min=1 step=1 + data-int 标记；
+  // 金额字段（单价/人均）保持原样：min=0 step=0.01，可输两位小数
+  const nf = (label, key, val, isInt) =>
+    '<div class="sf"><label>' + label + '</label><input type="number" class="t-input sf-input' + (isInt ? ' sf-int' : '') + '" data-key="' + key + '"' + (isInt ? ' data-int="1" inputmode="numeric" min="1" step="1"' : ' min="0" step="0.01"') + ' style="width:106px" value="' + (val == null ? '' : val) + '"></div>';
+  const sfSel = (label, key, opts, val) =>
+    '<div class="sf"><label>' + label + '</label><select class="t-input sf-select" data-key="' + key + '" style="width:132px"><option value="">选择</option>' +
+    opts.map(o => '<option value="' + o + '"' + (val === o ? ' selected' : '') + '>' + o + '</option>').join('') + '</select></div>';
+  switch (row.type) {
+    case '住宿': return '<div class="subfields">' + nf('晚数', 'nights', s.nights, true) + nf('每晚单价', 'price', s.price) + '</div>';
+    case '餐饮': return '<div class="subfields">' + sfSel('子类型', 'subType', DINING_SUBS, s.subType) + nf('人数', 'count', s.count, true) + nf('人均', 'perCap', s.perCap) + '</div>';
+    case '交通': return '<div class="subfields">' + sfSel('子类型', 'subType', TRANSIT_SUBS, s.subType) + '</div>';
+    case '办公':
+      // 办公：二级子分类下拉（仅业务分类展示，不参与打分）+ 数量×单价自动计算
+      return '<div class="subfields">' +
+        '<div class="sf"><label>子分类</label><select class="t-input sf-select" data-key="subType" style="width:216px"><option value="">选择子分类(选填)</option>' +
+        OFFICE_SUBS.map(o => '<option value="' + esc(o) + '"' + (s.subType === o ? ' selected' : '') + '>' + esc(o) + '</option>').join('') +
+        '</select></div>' +
+        nf('数量', 'qty', s.qty, true) + nf('单价', 'price', s.price) + '</div>';
+    case '娱乐': case '其他':
+      return '<div class="subfields">' + nf('数量', 'qty', s.qty, true) + nf('单价', 'price', s.price) + '</div>';
+    default: return '';
+  }
+}
+
+/* 动态子字段区渲染 + 金额互斥切换（核心） */
+function renderDynamicFields(rowId) {
+  const row = rows.find(r => r.id === rowId); if (!row) return;
+  const tr = rowEl(rowId); if (!tr) return;
+  const subCell = tr.querySelector('.cell-sub');
+  const amtInput = tr.querySelector('.r-amount');
+  const modeBox = tr.querySelector('.amount-mode');
+
+  if (row.type === '交通') {
+    // 交通：无自动计算、无覆盖按钮，金额必须手填，子字段仅有子类型
+    row.amountManual = true;
+    amtInput.readOnly = false;
+    amtInput.placeholder = '填写金额';
+    amtInput.value = (row.manualAmount == null) ? '' : row.manualAmount;
+    modeBox.innerHTML = '<span class="mode-hint">交通金额手动填写</span>';
+    subCell.classList.remove('off');
+    subCell.innerHTML = subfieldsHTML(row);
+  } else if (row.amountManual) {
+    // 手填覆盖模式：金额解锁可编辑，子字段已清空并禁用
+    amtInput.readOnly = false;
+    amtInput.placeholder = '填写金额';
+    amtInput.value = (row.manualAmount == null || row.manualAmount === '') ? '' : row.manualAmount;
+    modeBox.innerHTML = '<button type="button" class="btn btn-mini btn-ghost btn-restore">↺ 恢复自动计算</button>';
+    subCell.classList.add('off');
+    subCell.innerHTML = '<div class="sub-off">已切换手填模式，子字段停用</div>';
+  } else {
+    // 自动计算模式：金额只读，由子字段运算填充
+    amtInput.readOnly = true;
+    amtInput.placeholder = '自动计算';
+    const c = computedAmount(row);
+    amtInput.value = (c == null ? '' : c);
+    modeBox.innerHTML = '<button type="button" class="btn btn-mini btn-ghost btn-override">✏ 手填覆盖</button>';
+    subCell.classList.remove('off');
+    subCell.innerHTML = subfieldsHTML(row);
+  }
+}
+
+/* 金额自动计算：住宿=晚数×单价；餐饮=人数×人均；其他=数量×单价 */
+function computedAmount(row) {
+  if (row.type === '交通' || row.amountManual) return null;
+  const pos = v => { const x = num(v); return (x != null && x > 0) ? x : null; };
+  const s = row.sub || {};
+  let a = null, b = null;
+  if (row.type === '住宿') { a = pos(s.nights); b = pos(s.price); }
+  else if (row.type === '餐饮') { a = pos(s.count); b = pos(s.perCap); }
+  else { a = pos(s.qty); b = pos(s.price); }
+  return (a != null && b != null) ? round2(a * b) : null;
+}
+function currentAmount(row) {
+  if (row.type === '交通' || row.amountManual) return num(row.manualAmount);
+  return computedAmount(row);
+}
+
+/* ✏手填覆盖：解锁金额输入；清空并禁用本行全部子字段；评分切换为总额阈值判定 */
+function toggleOverride(row) {
+  if (!row || row.type === '交通') return; // 交通无覆盖按钮
+  const auto = computedAmount(row);
+  row.amountManual = true;
+  row.manualAmount = (auto != null) ? auto : ''; // 保留当前计算值便于直接修改
+  if (row.type === '餐饮' && row.sub.subType) row.lastDiningSub = row.sub.subType;
+  row.sub = (row.type === '餐饮') ? { subType: '' } : {}; // 清空全部子字段
+  renderDynamicFields(row.id);
+  updateRemarkRequirement(row.id);
+  updateTotals();
+}
+
+/* ↺恢复自动计算：清空手填金额、禁用金额手动输入，重新启用子字段 */
+function restoreAuto(row) {
+  if (!row || row.type === '交通') return;
+  row.amountManual = false;
+  row.manualAmount = '';
+  renderDynamicFields(row.id);
+  updateRemarkRequirement(row.id);
+  updateTotals();
+}
+
+/* 商户类型切换：展开对应子字段、重置金额模式 */
+function onTypeChange(row, val) {
+  if (row.type === val && row.typeTouched) return; // 防重复触发
+  row.typeTouched = true;
+  row.type = val;
+  row.sub = (val === '餐饮' || val === '交通') ? { subType: '' } : {};
+  row.lastDiningSub = '';
+  row.amountManual = (val === '交通'); // 交通恒为手填
+  row.manualAmount = '';
+  renderDynamicFields(row.id);
+  updateRemarkRequirement(row.id);
+  updateTotals();
+}
+
+/* 金额联动：自动模式下子字段变化 → 刷新金额显示 */
+function updateRowAmount(rowId) {
+  const row = rows.find(r => r.id === rowId); if (!row) return;
+  if (row.type === '交通' || row.amountManual) return;
+  const tr = rowEl(rowId); if (!tr) return;
+  const c = computedAmount(row);
+  tr.querySelector('.r-amount').value = (c == null ? '' : c);
+}
+
+/* 备注必填联动：本行金额>500 → 红星 + #FF9800 边框 */
+function updateRemarkRequirement(rowId) {
+  const row = rows.find(r => r.id === rowId); if (!row) return;
+  const tr = rowEl(rowId); if (!tr) return;
+  const amt = currentAmount(row);
+  const req = (amt != null && amt > 500);
+  row.remarkRequired = req;
+  const input = tr.querySelector('.r-remark');
+  input.classList.toggle('required', req);
+  tr.querySelector('.req-star').style.visibility = req ? 'visible' : 'hidden';
+  if (!req || String(row.remark || '').trim()) clearRemarkErr(rowId);
+}
+function showRemarkErr(rowId, msg) {
+  const tr = rowEl(rowId); if (!tr) return;
+  tr.querySelector('.remark-err').textContent = msg;
+}
+function clearRemarkErr(rowId) {
+  const tr = rowEl(rowId); if (!tr) return;
+  tr.querySelector('.remark-err').textContent = '';
+}
+
+/* 实时明细总额 */
+function sumAmounts() {
+  return round2(rows.reduce((sum, r) => {
+    const a = currentAmount(r);
+    return sum + (a != null ? a : 0);
+  }, 0));
+}
+function updateTotals() {
+  $('#detailTotal').textContent = '¥' + fmtMoney(sumAmounts());
+}
+function updateDeleteButtons() {
+  const disabled = rows.length <= 1;
+  $$('#detailTbody .r-del').forEach(b => { b.disabled = disabled; });
+}
+
+/* ---------------- 明细行事件（委托到 tbody） ---------------- */
+function onRowInput(e) {
+  const tr = e.target.closest('tr[data-id]'); if (!tr) return;
+  const row = rows.find(r => r.id === Number(tr.dataset.id)); if (!row) return;
+  const t = e.target;
+
+  if (t.classList.contains('r-date')) {
+    row.date = t.value;
+  } else if (t.classList.contains('r-amount')) {
+    row.manualAmount = t.value; // 仅手填/交通模式可编辑
+    updateRemarkRequirement(row.id);
+    updateTotals();
+  } else if (t.classList.contains('r-type')) {
+    onTypeChange(row, t.value);
+  } else if (t.classList.contains('r-city')) {
+    row.city = t.value;
+    row.district = '';
+    row.province = provinceOfCity(t.value);
+    refreshCitySelect(row);
+  } else if (t.classList.contains('r-dist')) {
+    row.district = t.value;
+  } else if (t.classList.contains('r-remark')) {
+    row.remark = t.value;
+    if (row.remarkRequired && t.value.trim()) clearRemarkErr(row.id);
+  } else if (t.classList.contains('sf-input') || t.classList.contains('sf-select')) {
+    row.sub[t.dataset.key] = t.value;
+    if (row.type === '餐饮' && t.dataset.key === 'subType') row.lastDiningSub = t.value;
+    updateRowAmount(row.id);
+    updateRemarkRequirement(row.id);
+    updateTotals();
+  }
+}
+
+/* 计数类子字段失焦修正：空/0/负数/小数/非数字 → 自动修正为最小有效值 1 */
+function sanitizeCountInput(raw) {
+  const s = String(raw == null ? '' : raw).trim();
+  if (s === '') return { fix: true, val: '1' };
+  const n = parseFloat(s);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) return { fix: true, val: '1' };
+  return { fix: false, val: String(n) }; // 合法时返回规范化整数字符串
+}
+
+/* 计数类输入框按键拦截：不允许输入小数点/负号/指数符号（数字键不受影响） */
+function onRowKeydown(e) {
+  const t = e.target;
+  if (t.classList && t.classList.contains('sf-input') && t.dataset && t.dataset.int === '1') {
+    if (['.', 'e', 'E', '-', '+'].indexOf(e.key) > -1) e.preventDefault();
+  }
+}
+
+/* 计数类修正的行内红色提示（3 秒自动消失，位于子字段区内） */
+function showSubIntErr(tr, msg) {
+  let tip = tr.querySelector('.sf-int-err');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.className = 'sf-int-err';
+    tr.querySelector('.cell-sub').appendChild(tip);
+  }
+  tip.textContent = msg;
+  setTimeout(() => { if (tip.parentNode) tip.parentNode.removeChild(tip); }, 3000);
+}
+
+function onRowBlur(e) {
+  const tr = e.target.closest && e.target.closest('tr[data-id]'); if (!tr) return;
+  const row = rows.find(r => r.id === Number(tr.dataset.id)); if (!row) return;
+  // 备注：金额>500 必填，失焦为空则行内红字提示
+  if (e.target.classList.contains('r-remark')) {
+    if (row.remarkRequired && !e.target.value.trim()) {
+      showRemarkErr(row.id, '金额超过500元需补充消费说明');
+    } else {
+      clearRemarkErr(row.id);
+    }
+  }
+  // 计数类子字段（晚数/人数/数量）：失焦时非正整数自动修正为 1 并红色提示
+  if (e.target.classList.contains('sf-input') && e.target.dataset && e.target.dataset.int === '1') {
+    const res = sanitizeCountInput(e.target.value);
+    e.target.value = res.val; // 规范化显示（含自动修正）
+    row.sub[e.target.dataset.key] = res.val;
+    if (res.fix) {
+      showSubIntErr(tr, '数量需为正整数，已自动修正为 1');
+      updateRowAmount(row.id);
+      updateRemarkRequirement(row.id);
+      updateTotals();
+    }
+  }
+}
+
+function onRowClick(e) {
+  const btn = e.target.closest('button'); if (!btn) return;
+  const tr = btn.closest('tr[data-id]'); if (!tr) return;
+  const row = rows.find(r => r.id === Number(tr.dataset.id)); if (!row) return;
+  if (btn.classList.contains('btn-override')) toggleOverride(row);
+  else if (btn.classList.contains('btn-restore')) restoreAuto(row);
+  else if (btn.classList.contains('r-del')) removeRow(row.id);
+}
+
+/* ================================================================
+ * 前置数据质量校验（扫描前拦截）
+ * ================================================================ */
+function readBasic() {
+  return {
+    name: $('#fName').value.trim(),
+    role: $('#fRole').value,
+    province: $('#tripProv').value,
+    city: $('#tripCity').value,
+    district: $('#tripDist').value,
+    start: $('#tripStart').value,
+    end: $('#tripEnd').value,
+    monthTotal: $('#fMonth').value.trim()
+  };
+}
+
+// 自动模式下必须补全的子字段清单
+function missingSubfields(row) {
+  const s = row.sub || {};
+  const pos = v => { const x = num(v); return (x != null && x > 0); };
+  const miss = [];
+  switch (row.type) {
+    case '住宿':
+      if (!pos(s.nights)) miss.push('晚数');
+      if (!pos(s.price)) miss.push('每晚单价');
+      break;
+    case '餐饮':
+      if (!s.subType) miss.push('子类型');
+      if (!pos(s.count)) miss.push('人数');
+      if (!pos(s.perCap)) miss.push('人均');
+      break;
+    case '交通':
+      if (!s.subType) miss.push('子类型');
+      break;
+    case '娱乐': case '办公': case '其他':
+      if (!pos(s.qty)) miss.push('数量');
+      if (!pos(s.price)) miss.push('单价');
+      break;
+  }
+  return miss;
+}
+
+function validateData() {
+  const errors = [];
+  const b = readBasic();
+  const today = todayStr();
+
+  // 1. 基础信息必填
+  if (!b.name) errors.push('请填写报销人姓名');
+  if (!b.role) errors.push('请选择岗位角色');
+  if (!b.province) errors.push('请选择出差省份');
+  if (!b.city) errors.push('请选择出差城市');
+  if (!b.start) errors.push('请选择出差起始日期');
+  if (!b.end) errors.push('请选择出差终止日期');
+  if (b.monthTotal !== '' && num(b.monthTotal) == null) errors.push('本月累计报销额格式不正确');
+
+  // 5. 基础逻辑：出差起始>终止
+  if (b.start && b.end && b.start > b.end) errors.push('出差起始日期不能晚于终止日期');
+
+  rows.forEach((row, i) => {
+    const n = i + 1;
+
+    // 3. 日期校验：明细日期≤今日且严格落在出差区间内
+    if (!row.date) {
+      errors.push('第' + n + '行请填写消费日期');
+    } else {
+      if (row.date > today) errors.push('第' + n + '行消费日期不能晚于今日');
+      if (b.start && b.end && (row.date < b.start || row.date > b.end)) {
+        errors.push('第' + n + '行消费日期不在出差日期范围内（出差起止：' + b.start + '~' + b.end + '），请检查');
+      }
+    }
+
+    // 1/2. 每行必填与子字段联动校验
+    if (!row.type) errors.push('第' + n + '行请选择商户类型');
+    if (!row.city) errors.push('第' + n + '行请选择消费城市');
+
+    const amt = currentAmount(row);
+    if (row.type === '交通') {
+      // 交通必须选子类型 + 金额>0
+      if (!row.sub.subType) errors.push('第' + n + '行已选交通，请补全子类型字段');
+      if (row.manualAmount === '' || row.manualAmount == null) errors.push('第' + n + '行请填写交通金额');
+      else if (amt == null) errors.push('第' + n + '行金额格式不正确');
+      else if (amt <= 0) errors.push('第' + n + '行交通金额必须大于0');
+      else if (amt > 100000) errors.push('第' + n + '行金额超出单笔上限（¥100,000）');
+    } else if (row.amountManual) {
+      // 手填模式仅校验金额>0
+      if (row.manualAmount === '' || row.manualAmount == null) errors.push('第' + n + '行请填写金额');
+      else if (amt == null) errors.push('第' + n + '行金额格式不正确');
+      else if (amt <= 0) errors.push('第' + n + '行金额必须大于0');
+      else if (amt > 100000) errors.push('第' + n + '行金额超出单笔上限（¥100,000）');
+    } else {
+      // 自动模式必须补全对应子字段且>0
+      const missing = missingSubfields(row);
+      if (missing.length) errors.push('第' + n + '行已选' + row.type + '，请补全' + missing.join('、') + '字段');
+    }
+
+    // 6. 金额>500 备注必填（阻断）
+    if (amt != null && amt > 500 && !String(row.remark || '').trim()) {
+      errors.push('第' + n + '行金额¥' + fmtMoney(amt) + ' > 500，备注为必填，请补充消费说明');
+    }
+  });
+
+  // 4. 跨省份校验（非阻断：弹窗警告）
+  const crossRows = [];
+  rows.forEach((row, i) => {
+    if (row.province && b.province && row.province !== b.province) crossRows.push(i);
+  });
+
+  // 7. 本月总额与明细总额不一致（非阻断：弹窗警告）
+  const detailTotal = sumAmounts();
+  let totalMismatch = null;
+  const filled = (b.monthTotal !== '') ? num(b.monthTotal) : null;
+  if (filled != null && Math.abs(filled - detailTotal) > 0.01) {
+    totalMismatch = { filled: filled, detailTotal: detailTotal, diff: round2(Math.abs(filled - detailTotal)) };
+  }
+
+  return { errors: errors, crossRows: crossRows, totalMismatch: totalMismatch, basic: b, detailTotal: detailTotal };
+}
+
+/* ================================================================
+ * 打分引擎
+ * ================================================================ */
+
+/* 通用偏离打分函数：按倍数区间返回分数与依据（不输出原始分数文本） */
+function calcDeviationScore(actualUnit, standardLimit, type) {
+  const ratio = actualUnit / standardLimit;
+  if (ratio <= 1) return { score: 0, reason: '', ratio: ratio };
+  if (ratio <= 1.5) return { score: 10, reason: type + '单价¥' + actualUnit + '超标准(标准¥' + standardLimit + ')', ratio: ratio };
+  if (ratio <= 2) return { score: 20, reason: '金额接近审批上限', ratio: ratio };
+  return { score: 25, reason: '单笔金额偏高疑似非报销类支出', ratio: ratio };
+}
+
+/* 岗位-类型不匹配判定：技术限办公/云服/会议；销售限招待/差旅/交通；职能限培训/团建/快递 */
+function isRoleMismatch(role, row) {
+  const scope = ROLE_SCOPE[role];
+  if (!scope) return false;
+  let concepts;
+  if (row.type === '餐饮') {
+    if (row.sub && row.sub.subType === '招待客户') concepts = ['招待'];
+    else if (row.sub && row.sub.subType === '员工聚餐') concepts = ['团建'];
+    else return false; // 早中晚工作餐视为常规刚需，不做岗位限定
+  } else {
+    concepts = ({
+      '住宿': ['差旅'], '交通': ['交通'], '娱乐': ['团建'],
+      '办公': ['办公', '云服'], '其他': ['培训', '快递', '会议']
+    })[row.type] || [];
+  }
+  return concepts.length > 0 && !concepts.some(c => scope.indexOf(c) > -1);
+}
+
+/* 单笔打分：6大维度累加（日期区间问题已在前置校验拦截，不参与打分） */
+function calcScore(row, ctx) {
+  let score = 0;
+  const reasons = [];
+  const amt = currentAmount(row) || 0;
+
+  // 维度1 时间异常：区分普通周末与法定节假日（法定节假日优先判定，维持原高分惩罚）
+  if (row.date) {
+    if (inHoliday(row.date)) {
+      // 法定节假日（春节、国庆等）：+20
+      score += 20;
+      reasons.push('法定节假日发生差旅消费，请重点复核出差事由');
+    } else if (isWeekend(row.date)) {
+      // 普通周六日：+8
+      score += 8;
+      reasons.push('周末非工作日发生差旅消费，请复核出差事由');
+    }
+  }
+
+  // 维度2 金额单价异常（amountManual 切换两套判定路径；办公类单列，按单笔总额阈值判定）
+  let dev = null;
+  let ratio = 0;
+  if (row.type === '办公') {
+    // 办公专用：打分只基于单笔总金额对 standard(400)/high(1200) 阈值判定（自动/手填统一路径）；
+    // 二级子选项仅作业务分类展示，不参与打分
+    const lim = STANDARD_LIMITS.办公;
+    if (amt > lim.high) {
+      // >1200：高风险提示，建议走专项采购流程
+      score += 25;
+      reasons.push('该办公类金额偏高，建议走专项采购流程，不适合普通员工差旅报销');
+    } else if (amt > lim.standard) {
+      // 400<金额≤1200：触发偏离打分，建议升级审批复核
+      score += 10;
+      reasons.push('办公类金额超出常规标准' + lim.standard + '元，建议部门负责人升级审批复核');
+    }
+    ratio = lim.standard > 0 ? amt / lim.standard : 0; // 供软提示（偏离倍数>1.5）判定
+  } else if (row.type === '交通') {
+    // 交通按子类型单次上限做偏离判定
+    const lim = STANDARD_LIMITS.交通[row.sub.subType] || STANDARD_LIMITS.交通['打车'];
+    dev = calcDeviationScore(amt, lim.standard, row.sub.subType || '交通');
+  } else if (row.amountManual) {
+    // 手填覆盖模式：ratio = 总额 / 类目standard，type 传“总额”
+    let std;
+    if (row.type === '餐饮') {
+      const sub = row.lastDiningSub || '员工聚餐';
+      std = (STANDARD_LIMITS.餐饮[sub] || STANDARD_LIMITS.餐饮['员工聚餐']).standard;
+      reasons.push('未填用餐人数，按总额判定');
+    } else {
+      std = STANDARD_LIMITS[row.type].standard;
+    }
+    dev = calcDeviationScore(amt, std, '总额');
+  } else {
+    // 自动子字段模式：住宿按每晚单价；餐饮按人均；娱乐/办公/其他按单价
+    if (row.type === '住宿') {
+      dev = calcDeviationScore(num(row.sub.price) || 0, STANDARD_LIMITS.住宿.standard, '住宿');
+    } else if (row.type === '餐饮') {
+      const sub = row.sub.subType || '员工聚餐';
+      const lim = STANDARD_LIMITS.餐饮[sub] || STANDARD_LIMITS.餐饮['员工聚餐'];
+      if (num(row.sub.count) != null && num(row.sub.count) > 0) {
+        dev = calcDeviationScore(num(row.sub.perCap) || 0, lim.standard, '餐饮');
+      } else {
+        // 人数缺失降级按总额判定
+        dev = calcDeviationScore(amt, lim.standard, '总额');
+        reasons.push('未填用餐人数，按总额判定');
+      }
+    } else {
+      dev = calcDeviationScore(num(row.sub.price) || 0, STANDARD_LIMITS[row.type].standard, row.type);
+    }
+  }
+  if (dev && dev.score > 0) {
+    score += dev.score;
+    if (dev.reason) reasons.push(dev.reason);
+    ratio = dev.ratio;
+  }
+
+  // 维度3 商户高频：同类商户≥3次（住宿不计入）
+  if (row.type !== '住宿' && (ctx.typeCounts[row.type] || 0) >= 3) {
+    score += 15;
+    reasons.push('同类消费频次偏高');
+  }
+
+  // 维度4 场景不匹配：消费城市≠出差城市；消费省份≠出差省份
+  if (row.city && ctx.tripCity && row.city !== ctx.tripCity) {
+    score += 20;
+    reasons.push('消费地与出差地不符');
+  }
+  if (row.province && ctx.tripProvince && row.province !== ctx.tripProvince) {
+    score += 20;
+    reasons.push('消费地与出差地不符');
+  }
+
+  // 维度5 敏感词角色校验：备注含KTV/酒吧/礼品
+  if (hasSensitiveWord(row.remark)) {
+    if (ctx.role !== '销售') { score += 15; reasons.push('备注含敏感词且非销售岗'); }
+    if (row.type === '娱乐') { score += 10; reasons.push('备注含敏感词且消费类型为娱乐'); }
+  }
+
+  // 维度6 角色不匹配：岗位-类型(非常规)
+  if (isRoleMismatch(ctx.role, row)) {
+    score += 10;
+    reasons.push('岗位-类型(非常规)');
+  }
+
+  // 软提示：偏离倍数>1.5，记入风险依据（不加分）
+  if (ratio > 1.5) reasons.push('单笔金额偏高，建议补充说明');
+
+  // 单笔风险阈值：≥35高；15-34中；<15低
+  const level = score >= 35 ? '高' : (score >= 15 ? '中' : '低');
+  return { score: score, reasons: dedupe(reasons), level: level, ratio: ratio };
+}
+
+/* 综合评分聚合（封顶100）：全部低=15；仅中=35+中*5(封顶25)+历史10；有高=65+高*8(封顶25)+历史10 */
+function computeComposite(items, historyDev) {
+  const high = items.filter(it => it.level === '高').length;
+  const med = items.filter(it => it.level === '中').length;
+  if (high === 0 && med === 0) return { score: 15, level: '低' }; // 全部低风险：综合分=15，不受历史影响
+  let score;
+  if (high > 0) score = 65 + Math.min(high * 8, 25) + (historyDev ? 10 : 0);
+  else score = 35 + Math.min(med * 5, 25) + (historyDev ? 10 : 0);
+  score = Math.min(score, 100); // 综合分封顶100
+  return { score: score, level: score >= 71 ? '高' : '中' }; // 65-70仍归中风险
+}
+
+/* 扫描计算主流程：单笔打分 + 综合聚合 + 历史偏离 */
+function computeScan() {
+  const b = readBasic();
+  const detailTotal = sumAmounts();
+  const monthTotal = (b.monthTotal !== '' && num(b.monthTotal) != null) ? num(b.monthTotal) : detailTotal;
+
+  // 历史偏离全局逻辑：读取历史均值（初始默认500），仅用于综合分加成
+  const pool = lsGet(LS_POOL, []);
+  const avg = pool.length ? pool.reduce((s, p) => s + (num(p.amount) || 0), 0) / pool.length : 500;
+  const historyDev = monthTotal > avg * 2; // 本月总额 > 历史均值*2 → 全局偏高
+
+  // 商户频次统计（住宿不计入）
+  const typeCounts = {};
+  rows.forEach(r => {
+    if (r.type && r.type !== '住宿') typeCounts[r.type] = (typeCounts[r.type] || 0) + 1;
+  });
+  const ctx = { role: b.role, tripProvince: b.province, tripCity: b.city, typeCounts: typeCounts };
+
+  const items = rows.map((r, i) => {
+    const sc = calcScore(r, ctx);
+    return {
+      idx: i + 1,
+      date: r.date,
+      amount: currentAmount(r),
+      type: r.type,
+      city: r.city,
+      district: r.district,
+      remark: r.remark,
+      score: sc.score,
+      reasons: sc.reasons,
+      level: sc.level,
+      ratio: sc.ratio
+    };
+  });
+  const counts = { 高: 0, 中: 0, 低: 0 };
+  items.forEach(it => { counts[it.level]++; });
+  const composite = computeComposite(items, historyDev);
+  return {
+    items: items, counts: counts, composite: composite,
+    historyDev: historyDev, monthTotal: monthTotal, avg: avg,
+    detailTotal: detailTotal, name: b.name, role: b.role, time: new Date()
+  };
+}
+
+/* ================================================================
+ * 扫描流程（校验 → 警告弹窗 → 加载动画 → 渲染结果）
+ * ================================================================ */
+function scanRisk() {
+  hideAlert();
+  const v = validateData();
+
+  // 校验失败：红条阻断扫描
+  if (v.errors.length) { showAlert(v.errors); return; }
+
+  // 非阻断警告：跨省消费 / 本月总额不一致 → 弹窗选择
+  const warns = [];
+  v.crossRows.forEach(i => warns.push('第' + (i + 1) + '行消费地与出差地不在同地，疑似异地非差旅消费'));
+  if (v.totalMismatch) {
+    warns.push('本月累计报销额 ¥' + fmtMoney(v.totalMismatch.filled) + ' 与明细总额 ¥' + fmtMoney(v.totalMismatch.detailTotal) +
+      ' 不一致，差额 ¥' + fmtMoney(v.totalMismatch.diff) + '，请核对');
+  }
+  if (warns.length) {
+    showModal({
+      title: '扫描前警告',
+      html: '<ul>' + warns.map(w => '<li>' + esc(w) + '</li>').join('') + '</ul>',
+      buttons: [
+        { text: '忽略警告继续扫描', cls: 'btn-primary', cb: startScan },
+        { text: '取消', cls: 'btn-ghost' }
+      ]
+    });
+    return;
+  }
+  startScan();
+}
+
+function startScan() {
+  const btn = $('#btnScan');
+  btn.disabled = true;              // 点击置灰
+  $('#loadingBox').hidden = false;  // 加载动画
+  // 模拟AI风控扫描耗时1秒
+  setTimeout(() => {
+    let result = null;
+    try {
+      result = computeScan();
+      renderResult(result);
+      saveHistory(result);
+    } catch (err) {
+      showAlert(['扫描过程出现异常：' + err.message]);
+    } finally {
+      btn.disabled = false;
+      $('#loadingBox').hidden = true;
+    }
+    if (result) $('#cardResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 1000);
+}
+
+function showAlert(errors) {
+  const bar = $('#alertBar');
+  bar.innerHTML = '<b>校验未通过，扫描已阻断：</b><ul>' + errors.map(e => '<li>' + esc(e) + '</li>').join('') + '</ul>';
+  bar.hidden = false;
+  bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function hideAlert() { const bar = $('#alertBar'); bar.hidden = true; bar.innerHTML = ''; }
+
+/* ================================================================
+ * 结果渲染
+ * ================================================================ */
+function renderResult(result) {
+  const card = $('#cardResult');
+  card.hidden = false;
+  const meta = LEVEL_META[result.composite.level];
+  const softItems = result.items.filter(it => it.ratio > 1.5);
+
+  let html = '<div class="result-summary">' +
+    '<div class="rs-icon">' + levelIcon(result.composite.level, 48) + '</div>' +
+    '<div class="rs-main">' +
+      '<div class="rs-score">综合风险分 <b>' + result.composite.score + '</b><span class="rs-unit">/100</span></div>' +
+      '<div class="rs-level ' + meta.cls + '">' + meta.label + '</div>' +
+    '</div>' +
+    '<div class="rs-stats">' +
+      '<span class="stat-chip h">高风险明细 <b>' + result.counts['高'] + '</b> 笔</span>' +
+      '<span class="stat-chip m">中风险明细 <b>' + result.counts['中'] + '</b> 笔</span>' +
+      '<span class="stat-chip l">低风险明细 <b>' + result.counts['低'] + '</b> 笔</span>' +
+    '</div>' +
+  '</div>';
+
+  if (result.historyDev) {
+    html += '<div class="soft-bar">本月填报总额 ¥' + fmtMoney(result.monthTotal) + ' 高于历史均值（¥' + fmtMoney(round2(result.avg)) + '）2倍，已计入全局偏离加成。</div>';
+  }
+  if (softItems.length) {
+    html += '<div class="soft-bar">黄色提示：' + softItems.map(it => '第' + it.idx + '行单笔金额偏高，建议补充说明').join('；') + '</div>';
+  }
+
+  html += '<div class="result-wrap"><table class="rtbl"><thead><tr>' +
+    '<th>日期</th><th>金额</th><th>商户类型</th><th>消费城市</th><th>单笔风险</th><th>判断依据</th>' +
+    '</tr></thead><tbody>';
+  result.items.forEach(it => {
+    const rowCls = it.level === '高' ? 'row-high' : (it.level === '中' ? 'row-med' : 'row-low');
+    const zebra = (it.level === '低' && it.idx % 2 === 0) ? ' row-zebra' : '';
+    // 低风险不展示冗余依据
+    const reasonHTML = (it.level === '低')
+      ? '<span class="dim">—</span>'
+      : it.reasons.map(r => (r === '单笔金额偏高，建议补充说明')
+          ? '<span class="soft-tag">' + esc(r) + '</span>'
+          : esc(r)).join('；');
+    html += '<tr class="' + rowCls + zebra + '">' +
+      '<td>' + esc(it.date || '-') + '</td>' +
+      '<td>¥' + fmtMoney(it.amount == null ? 0 : it.amount) + '</td>' +
+      '<td>' + esc(it.type || '-') + '</td>' +
+      '<td>' + esc(it.city || '-') + (it.district ? '·' + esc(it.district) : '') + '</td>' +
+      '<td class="cell-risk">' + levelIcon(it.level, 20) + '<span>' + it.level + '风险</span></td>' +
+      '<td>' + reasonHTML + '</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  $('#resultBody').innerHTML = html;
+  $('#resultTime').textContent = '扫描时间：' + fmtDateTime(result.time);
+}
+
+/* ================================================================
+ * 历史记录（localStorage 持久化）
+ * ================================================================ */
+function saveHistory(result) {
+  // reimburse_total_pool：历次扫描金额+时间（用于历史均值）
+  const pool = lsGet(LS_POOL, []);
+  pool.push({ amount: round2(result.monthTotal), time: Date.now() });
+  lsSet(LS_POOL, pool.slice(-200));
+
+  // reimburse_history：全部扫描记录（用于历史折叠区展示）
+  const hist = lsGet(LS_HIST, []);
+  hist.unshift({
+    time: fmtDateTime(new Date()),
+    name: result.name,
+    role: result.role,
+    total: round2(result.detailTotal),
+    score: result.composite.score,
+    level: result.composite.level
+  });
+  lsSet(LS_HIST, hist.slice(0, 100));
+  renderHistory();
+}
+
+function renderHistory() {
+  const hist = lsGet(LS_HIST, []);
+  const body = $('#historyBody');
+  if (!hist.length) {
+    body.innerHTML = '<div class="history-empty">暂无扫描记录</div>';
+    return;
+  }
+  body.innerHTML = hist.map(h => {
+    const cls = (LEVEL_META[h.level] || {}).cls || '';
+    return '<div class="history-item">' +
+      levelIcon(h.level, 20) +
+      '<span class="h-score">综合分 <b class="' + cls + '">' + h.score + '</b></span>' +
+      '<span class="h-time">' + esc(h.time) + '</span>' +
+      '<span>报销人 ' + esc(h.name || '-') + '</span>' +
+      '<span class="h-total">明细总额 ¥' + fmtMoney(h.total) + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleHistory() {
+  historyOpen = !historyOpen;
+  $('#historyBody').hidden = !historyOpen;
+  $('#btnToggleHist').textContent = historyOpen ? '收起' : '展开';
+}
+
+function confirmClearHistory() {
+  showModal({
+    title: '清空历史',
+    html: '<p>将清空全部历史扫描记录，并重置历史均值（历史偏离判断恢复默认）。</p><p>确定要清空吗？</p>',
+    buttons: [
+      { text: '清空', cls: 'btn-del', cb: clearHistory },
+      { text: '取消', cls: 'btn-ghost' }
+    ]
+  });
+}
+function clearHistory() {
+  try { localStorage.removeItem(LS_POOL); localStorage.removeItem(LS_HIST); } catch (e) { /* 忽略 */ }
+  renderHistory();
+}
+
+/* ================================================================
+ * 通用弹窗（白底圆角阴影 + 半透明黑遮罩，点遮罩/× 均可关闭）
+ * ================================================================ */
+let modalOnDismiss = null;
+function showModal(cfg) {
+  $('#modalTitle').textContent = cfg.title || '提示';
+  $('#modalBody').innerHTML = cfg.html || '';
+  const foot = $('#modalFoot');
+  foot.innerHTML = '';
+  (cfg.buttons || []).forEach(b => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn ' + (b.cls || 'btn-ghost');
+    btn.textContent = b.text;
+    btn.addEventListener('click', () => { closeModal(); if (b.cb) b.cb(); });
+    foot.appendChild(btn);
+  });
+  modalOnDismiss = cfg.onDismiss || null;
+  $('#overlay').hidden = false;
+}
+function closeModal() {
+  $('#overlay').hidden = true;
+  const d = modalOnDismiss; modalOnDismiss = null;
+  if (d) d();
+}
+
+/* 产品说明弹窗 */
+function showIntroModal() {
+  showModal({
+    title: '产品说明',
+    html: '<p>本工具通过内置规则引擎对报销提供风控建议，仅供参考。</p>' +
+      '<p>风险分级：低风险-自动通过、中风险-人工复核、高风险-拦截</p>' +
+      '<p>历史数据仅保存在本地浏览器，不上传任何服务器。</p>',
+    buttons: [{ text: '我知道了', cls: 'btn-primary' }]
+  });
+}
+
+/* ---------------- 启动 ---------------- */
+document.addEventListener('DOMContentLoaded', initForm);
+</script>
+</body>
+</html>
