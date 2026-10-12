@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>费用报销内控风险扫描仪</title>
+<title>报销风险扫描仪</title>
 <style>
-/* ============ 基础与重置 ============ */
+/*基础与重置*/
 [hidden]{display:none!important}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{background:#F5F7FA;color:#2A3440;font:14px/1.6 Arial,"Microsoft YaHei","微软雅黑","PingFang SC","Hiragino Sans GB",sans-serif}
+body{background:#F5F7FA;color:#2A3440;font:14px/1.6 Cambria Math,"Microsoft YaHei","微软雅黑","PingFang SC","Hiragino Sans GB",sans-serif}
 button{font-family:inherit}
 
-/* ============ 顶部导航 ============ */
+/*顶部导航*/
 .nav{background:#fff;border-bottom:1px solid #E4E9F0;position:sticky;top:0;z-index:20}
 .nav-inner{max-width:900px;margin:0 auto;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .nav-title{font-size:18px;font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:9px}
 .logo-dot{width:10px;height:10px;border-radius:50%;background:#E53935;box-shadow:0 0 0 3px rgba(229,57,53,.15);flex:none}
 
-/* ============ 布局容器与卡片 ============ */
+/*布局容器与卡片*/
 .container{max-width:900px;margin:26px auto 64px;padding:0 16px}
 .card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(35,49,68,.08);padding:22px 24px;margin-bottom:18px}
 .card-title{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;margin:0 0 18px;flex-wrap:wrap}
@@ -26,7 +26,7 @@ button{font-family:inherit}
 .title-right{margin-left:auto;font-weight:400;font-size:12.5px;color:#8A94A6;display:flex;align-items:center;gap:8px}
 .total-num{color:#E53935;font-size:15px}
 
-/* ============ 表单 ============ */
+/*表单*/
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px}
 .field label{display:block;font-size:13px;color:#5A6675;margin-bottom:6px}
 .req{color:#E53935;margin-right:2px}
@@ -37,7 +37,7 @@ button{font-family:inherit}
 .date-row .sep{color:#8A94A6;flex:none}
 .hint{font-size:12px;color:#9AA4B2;margin-top:5px}
 
-/* ============ 按钮 ============ */
+/*按钮*/
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:6px;padding:8px 18px;font-size:13.5px;cursor:pointer;transition:background .15s,border-color .15s,color .15s;user-select:none}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn-primary{background:#E53935;color:#fff}
@@ -49,7 +49,7 @@ button{font-family:inherit}
 .btn-mini{padding:3px 10px;font-size:12px}
 .btn-scan{padding:10px 36px;font-size:15px;font-weight:600}
 
-/* ============ 明细录入表格 ============ */
+/*明细录入表格*/
 .table-wrap{overflow-x:auto;border:1px solid #E4E9F0;border-radius:8px}
 table.dtbl,table.rtbl{width:100%;border-collapse:collapse;background:#fff}
 table.dtbl{min-width:980px}
@@ -83,12 +83,12 @@ table.dtbl tbody tr:nth-child(even){background:#FAFBFD} /* 斑马纹（明细表
 .spinner{width:20px;height:20px;border-radius:50%;border:3px solid #E6EAF0;border-top-color:#E53935;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ============ 提示条 ============ */
+/*提示条*/
 .alert-bar{background:#FFF1F0;border:1px solid #FFCDD2;color:#B03A36;border-radius:8px;padding:11px 15px;margin-bottom:14px;font-size:13px}
 .alert-bar ul{margin:5px 0 0;padding-left:18px}
 .soft-bar{background:#FFF8E1;border:1px solid #FFE082;color:#8A6D1D;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:12.5px}
 
-/* ============ 扫描结果 ============ */
+/*扫描结果*/
 .result-summary{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:4px 0 18px;border-bottom:1px dashed #E4E9F0;margin-bottom:14px}
 .lvl-icon{border-radius:50%;display:inline-block;vertical-align:middle}
 .rs-main .rs-score{font-size:14px;color:#5A6675}
@@ -111,7 +111,7 @@ table.rtbl tbody tr.row-zebra{background:#FAFBFD} /* 斑马纹（结果表低风
 .soft-tag{color:#8A6D1D;background:#FFF3CD;border-radius:4px;padding:1px 6px;font-size:12px}
 .result-wrap{overflow-x:auto;border:1px solid #E4E9F0;border-radius:8px}
 
-/* ============ 历史记录 ============ */
+/*历史记录*/
 .history-actions{display:flex;gap:8px}
 .history-empty{color:#9AA4B2;font-size:13px;padding:6px 2px}
 .history-item{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 4px;border-bottom:1px dashed #E4E9F0;font-size:13px;color:#4A5563}
@@ -121,7 +121,7 @@ table.rtbl tbody tr.row-zebra{background:#FAFBFD} /* 斑马纹（结果表低风
 .h-time{color:#9AA4B2;font-size:12.5px}
 .h-total{font-weight:600}
 
-/* ============ 弹窗 ============ */
+/*弹窗*/
 .overlay{position:fixed;inset:0;background:rgba(17,24,32,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
 .modal{background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.28);width:min(470px,94vw);max-height:82vh;overflow:auto}
 .modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #E4E9F0}
@@ -136,7 +136,7 @@ table.rtbl tbody tr.row-zebra{background:#FAFBFD} /* 斑马纹（结果表低风
 
 footer.page-foot{max-width:900px;margin:0 auto 40px;padding:0 16px;text-align:center;color:#AAB4C2;font-size:12px}
 
-/* ============ 响应式 ============ */
+/*响应*/
 @media (max-width:720px){
   .grid2{grid-template-columns:1fr}
   .rs-stats{margin-left:0}
@@ -159,7 +159,7 @@ footer.page-foot{max-width:900px;margin:0 auto 40px;padding:0 16px;text-align:ce
 
 <div class="container">
 
-  <!-- ============ 基础信息 ============ -->
+  <!-- 基础信息 -->
   <section class="card">
     <h2 class="card-title">基础信息</h2>
     <div class="grid2">
@@ -200,7 +200,7 @@ footer.page-foot{max-width:900px;margin:0 auto 40px;padding:0 16px;text-align:ce
     </div>
   </section>
 
-  <!-- ============ 明细录入 ============ -->
+  <!-- 明细录入 -->
   <section class="card">
     <h2 class="card-title">明细录入<span class="title-right">明细总额：<b class="total-num" id="detailTotal">¥0</b></span></h2>
     <div class="table-wrap">
@@ -226,18 +226,18 @@ footer.page-foot{max-width:900px;margin:0 auto 40px;padding:0 16px;text-align:ce
       <div id="alertBar" class="alert-bar" hidden></div>
       <div class="scan-row">
         <button class="btn btn-primary btn-scan" id="btnScan" type="button">开始扫描</button>
-        <div id="loadingBox" class="loading-box" hidden><span class="spinner"></span>AI风控扫描中...</div>
+        <div id="loadingBox" class="loading-box" hidden><span class="spinner"></span>风险扫描中...</div>
       </div>
     </div>
   </section>
 
-  <!-- ============ 扫描结果 ============ -->
+  <!-- 扫描结果 -->
   <section class="card" id="cardResult" hidden>
     <h2 class="card-title">扫描结果<span class="title-right" id="resultTime"></span></h2>
     <div id="resultBody"></div>
   </section>
 
-  <!-- ============ 历史记录（localStorage） ============ -->
+  <!-- 历史记录（localStorage） -->
   <section class="card">
     <h2 class="card-title">历史记录
       <span class="title-right history-actions">
@@ -252,7 +252,7 @@ footer.page-foot{max-width:900px;margin:0 auto 40px;padding:0 16px;text-align:ce
 
 <footer class="page-foot">数据仅保存在本地浏览器 localStorage · 风控建议仅供参考</footer>
 
-<!-- ============ 通用弹窗 ============ -->
+<!-- 通用弹窗 -->
 <div class="overlay" id="overlay" hidden>
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-head"><h3 id="modalTitle">提示</h3><button class="modal-close" id="modalClose" type="button" aria-label="关闭">×</button></div>
@@ -269,12 +269,12 @@ footer.page-foot{max-width:900px;margin:0 auto 40px;padding:0 16px;text-align:ce
  * - 防御性编程：所有外部输入（金额/日期/城市）在扫描前统一拦截校验
  * ================================================================ */
 
-/* ---------------- 内置常量 ---------------- */
+/*内置常量*/
 // 各类目费用标准（standard=标准上限，high=审批上限）
 const STANDARD_LIMITS = {
   住宿: { standard: 500, high: 800 },
   餐饮: {
-    '早中晚工作餐': { standard: 50, high: 100 },
+    '工作餐': { standard: 50, high: 100 },
     '员工聚餐': { standard: 80, high: 150 },
     '招待客户': { standard: 150, high: 300 }
   },
@@ -288,7 +288,7 @@ const STANDARD_LIMITS = {
   其他: { standard: 3000, high: 5000 }
 };
 
-// 精简版省市区数据（约50条，用于省市比对与三级联动）
+// 精简版省市区数据
 const REGION_DATA = {
   '北京市': { '北京市': ['东城区', '朝阳区', '海淀区'] },
   '上海市': { '上海市': ['黄浦区', '浦东新区'] },
@@ -304,7 +304,7 @@ const REGION_DATA = {
   '河南省': { '郑州市': ['金水区'] }
 };
 
-// 法定节假日区间（简化维护表：周末由 getDay 判定，此处只列法定假日；可按国务院公告自行维护）
+// 法定节假日区间（简化维护表：周末由getDay判定，此处只列法定假日；可按国务院公告自行维护）
 const HOLIDAY_RANGES = [
   ['2025-01-01', '2025-01-01'], // 元旦
   ['2025-01-28', '2025-02-04'], // 春节
@@ -318,7 +318,7 @@ const HOLIDAY_RANGES = [
   ['2026-05-01', '2026-05-05'], // 劳动节
   ['2026-06-19', '2026-06-21'], // 端午
   ['2026-09-25', '2026-09-27'], // 中秋
-  ['2026-10-01', '2026-10-08']  // 国庆
+  ['2026-10-01', '2026-10-07']  // 国庆
 ];
 
 const SENSITIVE_WORDS = ['KTV', '酒吧', '礼品']; // 备注敏感词
@@ -416,9 +416,7 @@ function levelIcon(level, size) {
     '<circle cx="24" cy="24" r="22" fill="' + (colors[level] || colors.低) + '"/>' + (glyphs[level] || glyphs.低) + '</svg>';
 }
 
-/* ================================================================
- * 表单初始化
- * ================================================================ */
+/*表单初始化*/
 function initForm() {
   const today = todayStr();
   // 初始化读取今日日期，设置全部日期控件 max
@@ -461,7 +459,7 @@ function initForm() {
   renderHistory();   // 读取 localStorage 渲染历史
 }
 
-/* ---------------- 出差城市三级联动 ---------------- */
+/*出差城市三级联动*/
 function fillTripCities() {
   const prov = $('#tripProv').value;
   $('#tripCity').innerHTML = '<option value="">城市</option>' +
@@ -475,7 +473,7 @@ function fillTripDistricts() {
     dists.map(d => '<option value="' + d + '">' + d + '</option>').join('');
 }
 
-/* ---------------- 明细日期边界（锁定在出差起止区间内且 ≤ 今日） ---------------- */
+/*明细日期边界（锁定在出差起止区间内且 ≤ 今日）*/
 function rowDateBounds() {
   const today = todayStr();
   const start = $('#tripStart') ? $('#tripStart').value : '';
@@ -488,9 +486,7 @@ function bindRowDateRanges() {
   $$('#detailTbody .r-date').forEach(inp => { inp.min = b.min; inp.max = b.max; });
 }
 
-/* ================================================================
- * 明细行：构建 / 渲染 / 交互
- * ================================================================ */
+/* 明细行：构建 / 渲染 / 交互 */
 function addRow() {
   rows.push({
     id: ++rowSeq,
@@ -744,7 +740,7 @@ function updateDeleteButtons() {
   $$('#detailTbody .r-del').forEach(b => { b.disabled = disabled; });
 }
 
-/* ---------------- 明细行事件（委托到 tbody） ---------------- */
+/* 明细行事件（委托到 tbody）*/
 function onRowInput(e) {
   const tr = e.target.closest('tr[data-id]'); if (!tr) return;
   const row = rows.find(r => r.id === Number(tr.dataset.id)); if (!row) return;
@@ -959,9 +955,7 @@ function validateData() {
   return { errors: errors, crossRows: crossRows, totalMismatch: totalMismatch, basic: b, detailTotal: detailTotal };
 }
 
-/* ================================================================
- * 打分引擎
- * ================================================================ */
+/*打分引擎*/
 
 /* 通用偏离打分函数：按倍数区间返回分数与依据（不输出原始分数文本） */
 function calcDeviationScore(actualUnit, standardLimit, type) {
@@ -980,7 +974,7 @@ function isRoleMismatch(role, row) {
   if (row.type === '餐饮') {
     if (row.sub && row.sub.subType === '招待客户') concepts = ['招待'];
     else if (row.sub && row.sub.subType === '员工聚餐') concepts = ['团建'];
-    else return false; // 早中晚工作餐视为常规刚需，不做岗位限定
+    else return false; // 工作餐视为常规刚需，不做岗位限定
   } else {
     concepts = ({
       '住宿': ['差旅'], '交通': ['交通'], '娱乐': ['团建'],
@@ -1217,9 +1211,7 @@ function showAlert(errors) {
 }
 function hideAlert() { const bar = $('#alertBar'); bar.hidden = true; bar.innerHTML = ''; }
 
-/* ================================================================
- * 结果渲染
- * ================================================================ */
+/* 结果渲染 */
 function renderResult(result) {
   const card = $('#cardResult');
   card.hidden = false;
@@ -1273,9 +1265,7 @@ function renderResult(result) {
   $('#resultTime').textContent = '扫描时间：' + fmtDateTime(result.time);
 }
 
-/* ================================================================
- * 历史记录（localStorage 持久化）
- * ================================================================ */
+/* 历史记录（localStorage 持久化）*/
 function saveHistory(result) {
   // reimburse_total_pool：历次扫描金额+时间（用于历史均值）
   const pool = lsGet(LS_POOL, []);
@@ -1336,9 +1326,7 @@ function clearHistory() {
   renderHistory();
 }
 
-/* ================================================================
- * 通用弹窗（白底圆角阴影 + 半透明黑遮罩，点遮罩/× 均可关闭）
- * ================================================================ */
+/* 通用弹窗（白底圆角阴影 + 半透明黑遮罩，点遮罩/× 均可关闭）*/
 let modalOnDismiss = null;
 function showModal(cfg) {
   $('#modalTitle').textContent = cfg.title || '提示';
@@ -1373,7 +1361,7 @@ function showIntroModal() {
   });
 }
 
-/* ---------------- 启动 ---------------- */
+/* 启动 */
 document.addEventListener('DOMContentLoaded', initForm);
 </script>
 </body>
