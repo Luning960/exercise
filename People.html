@@ -1,0 +1,2161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>人物 · 人生阶段</title>
+<style>
+  :root {
+    --bg: #042352;
+    --deep: #021533;
+    --surface: #0b2d62;
+    --fg: #f6f3ec;
+    --muted: #9eb0c6;
+    --line: #1d447c;
+    --accent: #c9a36a;
+    --font-cn: "Songti SC", STSong, "Noto Serif CJK SC", "WenQuanYi Zen Hei", serif;
+    --font-en: Cambria, "Times New Roman", "Liberation Serif", serif;
+    --font-body: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", "WenQuanYi Zen Hei", sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); }
+  html[lang="zh-CN"] body { font-family: var(--font-body); }
+  html[lang="en"] body { font-family: var(--font-en); }
+  body { min-height: 100%; line-height: 1.5; font-size: 15px; }
+  button, [role="button"] { cursor: pointer; }
+  button:disabled { cursor: default; opacity: .45; }
+  ::selection { background: var(--accent); color: var(--deep); }
+  ::placeholder { color: var(--muted); opacity: 1; }
+  [hidden] { display: none !important; }
+  .num, input[type="number"] { font-family: var(--font-en); }
+  h1, h2, h3 { font-weight: 500; }
+  h1, .panel-head h2, html[lang="zh-CN"] .lib-card h3 {
+    font-family: var(--font-cn);
+    letter-spacing: .22em;
+  }
+  html[lang="en"] h1,
+  html[lang="en"] .panel-head h2,
+  html[lang="en"] .lib-card h3 {
+    font-family: var(--font-en);
+    letter-spacing: .22em;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 20px 56px; }
+  .topbar {
+    position: sticky; top: 0; z-index: 4;
+    background: var(--bg);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+  .brand { display: flex; align-items: baseline; gap: 12px; }
+  .brand-cn { font-family: var(--font-cn); letter-spacing: .22em; font-size: 22px; }
+  .brand-en { font-family: var(--font-en); letter-spacing: .22em; font-size: 13px; color: var(--muted); text-transform: uppercase; }
+  html[lang="en"] .brand-en { color: var(--fg); font-size: 22px; }
+  html[lang="en"] .brand-cn { color: var(--muted); font-size: 13px; }
+  h1 { margin: 10px 0 0; font-size: 36px; line-height: 1.15; }
+  .sub { margin: 8px 0 0; color: var(--muted); font-size: 14px; letter-spacing: 0; }
+  .header-actions, .controls, .modal-actions, .lib-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  button {
+    font: inherit;
+    min-height: 44px;
+    padding: 0 14px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--fg);
+    letter-spacing: .06em;
+  }
+  button:hover { border-color: var(--accent); }
+  button.is-active { border-color: var(--accent); color: var(--accent); }
+
+  .progress { display: flex; list-style: none; margin: 16px 0 0; padding: 0; border: 1px solid var(--line); }
+  .progress li { flex: 1; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-right: 1px solid var(--line); color: var(--muted); min-width: 0; }
+  .progress li:last-child { border-right: 0; }
+  .badge {
+    flex: 0 0 auto;
+    min-width: 32px; height: 28px;
+    display: grid; place-items: center;
+    border: 1px solid var(--line);
+    font-family: var(--font-en);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .progress .lab { font-size: 13px; letter-spacing: .08em; }
+  .progress li.is-done { color: var(--fg); }
+  .progress li.is-done .badge { background: var(--accent); border-color: var(--accent); color: var(--deep); }
+  .progress li.is-current { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+  .progress li.is-current .badge { border-color: var(--accent); color: var(--accent); }
+  .progress li.is-done.is-current .badge {
+    background: var(--accent);
+    color: var(--deep);
+    outline: 1px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .layout { display: grid; grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .stack { display: grid; gap: 16px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); padding: 16px; min-width: 0; }
+  .panel.is-current { box-shadow: inset 3px 0 0 var(--accent); }
+  .is-locked { pointer-events: none; opacity: .35; }
+  .panel-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .panel-head h2 { margin: 0; font-size: 15px; line-height: 1.45; }
+  .kicker { color: var(--accent); font-family: var(--font-en); font-size: 14px; }
+
+  label.field { display: grid; gap: 4px; }
+  .field > span, .hint, .drop-sub, .drop-count { color: var(--muted); font-size: 12px; letter-spacing: .04em; }
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 12px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--fg);
+    border-radius: 0;
+    font: inherit;
+  }
+  input[type="number"] { font-family: var(--font-en); }
+  input:focus { outline: none; border-color: var(--accent); }
+  button:focus-visible, .thumb:focus-visible, .slider:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+  .name-state { min-height: 1.2em; margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+  .name-state.is-ok { color: var(--accent); }
+
+  .drop {
+    display: grid;
+    gap: 6px;
+    place-items: center;
+    text-align: center;
+    min-height: 132px;
+    padding: 18px;
+    border: 1px dashed var(--line);
+    background: transparent;
+    cursor: pointer;
+  }
+  .drop:hover, .drop.is-hot { border-color: var(--accent); }
+  .drop-title { letter-spacing: .08em; }
+  .sr {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); border: 0;
+  }
+
+  .edit-list { display: grid; gap: 8px; max-height: 520px; overflow: auto; }
+  .edit {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 8px;
+    background: var(--deep);
+    border: 1px solid var(--line);
+  }
+  .shot-wrap { position: relative; width: 72px; height: 96px; }
+  .shot { width: 72px; height: 96px; object-fit: cover; display: block; border: 1px solid var(--line); }
+  .shot-idx {
+    position: absolute; z-index: 1; left: 0; top: 0;
+    padding: 2px 5px; color: var(--accent); background: var(--deep);
+    font-size: 12px; letter-spacing: .04em;
+    border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  }
+  .fields { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; align-items: end; }
+  .grow { grid-column: 1 / -1; margin: 0; color: var(--accent); font-size: 12px; letter-spacing: .04em; }
+  .remove { justify-self: start; }
+
+  .empty {
+    min-height: 280px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    color: var(--muted);
+    border: 1px dashed var(--line);
+    padding: 24px;
+    margin: 0;
+  }
+  .stage-row { display: grid; grid-template-columns: 44px minmax(0, 360px) 44px; justify-content: center; align-items: center; gap: 12px; }
+  .stage { width: 100%; aspect-ratio: 3 / 4; background: var(--deep); border: 1px solid var(--line); overflow: hidden; }
+  .stage img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 1; transition: opacity .28s ease; }
+  .arrow {
+    width: 44px; height: 44px; padding: 0;
+    display: grid; place-items: center;
+  }
+  .arrow svg { display: block; }
+  .stage-meta { text-align: center; margin-top: 12px; }
+  .age { color: var(--accent); line-height: 1; }
+  .age .num { font-size: 64px; }
+  .unit { font-size: 16px; margin-left: 6px; letter-spacing: .12em; }
+  .pos { margin: 0; color: var(--muted); font-size: 13px; letter-spacing: .08em; }
+  .pname { margin: 8px 0 0; font-size: 18px; letter-spacing: .06em; }
+  .pname.is-empty { color: var(--muted); }
+  .pgroup { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+  .slider-wrap { max-width: 460px; margin: 8px auto 0; }
+  .slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 28px; background: transparent; margin: 0;
+  }
+  .slider::-webkit-slider-runnable-track { height: 1px; background: var(--line); }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 0;
+    background: var(--accent); border: 0; margin-top: -7px; cursor: pointer;
+  }
+  .slider::-moz-range-track { height: 1px; background: var(--line); border: 0; }
+  .slider::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 0;
+    background: var(--accent); border: 0; cursor: pointer;
+  }
+  .controls { justify-content: center; margin-top: 8px; }
+  .hint.center, #orderMode { text-align: center; }
+  .thumbs {
+    display: flex; gap: 12px; overflow-x: auto;
+    padding: 16px 8px 18px; align-items: flex-end;
+    margin-top: 8px;
+  }
+  .gdiv {
+    flex: 0 0 auto; width: 76px; align-self: stretch;
+    display: flex; flex-direction: column; justify-content: center; gap: 4px;
+    border-left: 1px solid var(--accent); padding: 0 8px; color: var(--accent);
+  }
+  .gdiv-zh { font-family: var(--font-cn); letter-spacing: .12em; font-size: 13px; }
+  .gdiv-en { font-family: var(--font-en); font-size: 11px; letter-spacing: .04em; color: var(--muted); }
+  html[lang="en"] .gdiv-en { color: var(--accent); }
+  html[lang="en"] .gdiv-zh { color: var(--muted); }
+  .titem { flex: 0 0 auto; width: 72px; text-align: center; }
+  .thumb {
+    width: 72px; aspect-ratio: 3 / 4;
+    border: 2px solid transparent; padding: 0;
+    background: var(--deep); position: relative;
+    cursor: grab; display: block;
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+  .thumb.is-on { border: 2px solid var(--accent); transform: scale(1.08); z-index: 2; }
+  .thumb.is-dragging { opacity: .4; }
+  .thumb.is-over { border-color: var(--accent); transform: scale(1.06); z-index: 3; }
+  .thumb.is-on.is-over { transform: scale(1.08); }
+  .tage { display: block; margin-top: 6px; font-size: 12px; color: var(--muted); }
+  .titem:has(.is-on) .tage { color: var(--accent); }
+  .gbars { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .gbar {
+    border: 1px solid var(--accent);
+    padding: 8px 10px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    align-items: baseline;
+    font-size: 12px;
+  }
+  .gbar b { color: var(--accent); font-weight: 500; letter-spacing: .08em; }
+  .gbar .en { font-family: var(--font-en); color: var(--muted); }
+
+  .lib-back, .modal-back {
+    position: fixed; inset: 0; z-index: 30;
+    background: rgba(2, 21, 51, .72);
+  }
+  .lib {
+    position: absolute; top: 0; right: 0; bottom: 0;
+    width: min(440px, 100%);
+    background: var(--deep);
+    border-left: 1px solid var(--line);
+    overflow: auto;
+    padding: 20px;
+  }
+  .lib-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .lib-head h2 { margin: 0; font-family: var(--font-cn); letter-spacing: .22em; font-size: 20px; font-weight: 500; }
+  html[lang="en"] .lib-head h2 { font-family: var(--font-en); }
+  .lib-card {
+    display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 12px;
+    border: 1px solid var(--line); background: var(--surface);
+    padding: 10px; margin-top: 10px; cursor: pointer; text-align: left;
+  }
+  .lib-card:hover { border-color: var(--accent); }
+  .lib-card img { width: 84px; aspect-ratio: 3 / 4; object-fit: cover; display: block; border: 1px solid var(--line); }
+  .lib-card h3 { margin: 0 0 6px; font-size: 16px; line-height: 1.35; overflow-wrap: anywhere; }
+  .meta-line { margin: 0 0 4px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+  .meta-line b { font-weight: 500; color: var(--fg); }
+  .meta-line.is-accent { color: var(--accent); }
+  .lib-actions { margin-top: 16px; }
+  .modal-back { z-index: 40; display: grid; place-items: center; padding: 16px; }
+  .modal { width: min(440px, 100%); background: var(--surface); border: 1px solid var(--line); padding: 20px; }
+  .modal h3 { margin: 0 0 8px; font-family: var(--font-cn); letter-spacing: .16em; font-size: 18px; font-weight: 500; }
+  html[lang="en"] .modal h3 { font-family: var(--font-en); }
+  .modal p { margin: 0 0 16px; color: var(--muted); }
+  .player-back {
+    position: fixed; inset: 0; z-index: 35;
+    background: rgba(2, 21, 51, .78);
+    display: grid; place-items: center;
+    padding: 16px;
+  }
+  .player {
+    width: min(520px, 100%);
+    max-height: calc(100vh - 32px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    padding: 0 16px 18px;
+  }
+  .player-rule { height: 2px; background: var(--accent); margin: 0 -16px 14px; }
+  .player-head {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    margin-bottom: 12px;
+  }
+  .player-head h2 {
+    margin: 0; min-width: 0;
+    font-family: var(--font-cn); letter-spacing: .16em;
+    font-size: 18px; font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+  html[lang="en"] .player-head h2 { font-family: var(--font-en); }
+  .player-progress {
+    height: 2px; max-width: 460px; margin: 14px auto 0;
+    background: var(--line);
+  }
+  .player-progress > span {
+    display: block; height: 100%; width: 0;
+    background: var(--accent);
+    transition: width .35s linear;
+  }
+  .toast {
+    position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+    z-index: 50; background: var(--deep); border: 1px solid var(--accent);
+    color: var(--fg); padding: 10px 16px; max-width: calc(100% - 32px);
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    h1 { font-size: 26px; }
+    .progress { flex-direction: column; }
+    .progress li { border-right: 0; border-bottom: 1px solid var(--line); }
+    .progress li:last-child { border-bottom: 0; }
+    .fields { grid-template-columns: 1fr; }
+    .stage-row { grid-template-columns: 44px minmax(0, 1fr) 44px; }
+    .age .num { font-size: 52px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stage img { transition: none; }
+    .player-progress > span { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <header>
+      <div>
+        <div class="brand">
+          <span class="brand-cn">人物</span>
+          <span class="brand-en">People</span>
+        </div>
+        <h1 data-i18n="title"></h1>
+        <p class="sub" data-i18n="subtitle"></p>
+      </div>
+      <div class="header-actions">
+        <button id="btnLib" type="button" data-i18n="lib"></button>
+        <button id="btnReset" type="button" data-i18n="reset"></button>
+        <button id="btnLang" type="button">EN</button>
+      </div>
+    </header>
+    <ol class="progress" id="progress">
+      <li data-step="1"><span class="badge">01</span><span class="lab" data-i18n="ind1"></span></li>
+      <li data-step="2"><span class="badge">02</span><span class="lab" data-i18n="ind2"></span></li>
+      <li data-step="3"><span class="badge">03</span><span class="lab" data-i18n="ind3"></span></li>
+      <li data-step="4"><span class="badge">04</span><span class="lab" data-i18n="ind4"></span></li>
+    </ol>
+  </div>
+
+  <div class="layout">
+    <div class="stack">
+      <section id="panel1" class="panel">
+        <div class="panel-head"><span class="kicker">01</span><h2 data-i18n="step1"></h2></div>
+        <label class="field">
+          <span data-i18n="nameLabel"></span>
+          <input id="nameInput" type="text" maxlength="80" autocomplete="off" data-i18n-placeholder="namePh">
+        </label>
+        <p id="nameState" class="name-state"></p>
+        <p class="hint" data-i18n="nameHelp"></p>
+      </section>
+
+      <section id="panel2" class="panel is-locked">
+        <div class="panel-head"><span class="kicker">02</span><h2 data-i18n="step2"></h2></div>
+        <label id="drop" class="drop">
+          <input id="fileInput" class="sr" type="file" accept="image/*" multiple>
+          <span class="drop-title" data-i18n="drop"></span>
+          <span class="drop-sub" data-i18n="dropSub"></span>
+          <span id="uploadCount" class="drop-count num"></span>
+        </label>
+      </section>
+
+      <section id="panel3" class="panel is-locked">
+        <div class="panel-head"><span class="kicker">03</span><h2 data-i18n="step3"></h2></div>
+        <div id="editList" class="edit-list"></div>
+      </section>
+    </div>
+
+    <section id="panel4" class="panel is-locked">
+      <div class="panel-head"><span class="kicker">04</span><h2 data-i18n="step4"></h2></div>
+      <p id="empty" class="empty" data-i18n="empty"></p>
+      <div id="viewer" hidden>
+        <div class="stage-row">
+          <button id="btnPrev" class="arrow" type="button" aria-label="Previous">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 L8 12 L15 19" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          </button>
+          <div class="stage"><img id="stageImg" alt=""></div>
+          <button id="btnNext" class="arrow" type="button" aria-label="Next">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5 L16 12 L9 19" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          </button>
+        </div>
+        <div class="stage-meta" id="stageMeta">
+          <p class="pos num" id="stagePos"></p>
+          <div class="age"><span id="stageAge" class="num"></span><span id="stageUnit" class="unit"></span></div>
+          <p class="pname" id="stageTitle"></p>
+          <p class="pgroup" id="stageGroup"></p>
+        </div>
+        <div class="slider-wrap">
+          <input id="slider" class="slider" type="range" min="0" max="0" step="any" value="0">
+        </div>
+        <div class="controls">
+          <button id="btnPlay" type="button" aria-pressed="false" aria-haspopup="dialog"></button>
+          <button id="btnExport" type="button"></button>
+          <button id="btnExportVideo" type="button"></button>
+          <button id="btnSave" type="button"></button>
+          <button id="btnSort" type="button"></button>
+        </div>
+        <p id="orderMode" class="hint"></p>
+        <p class="hint center" data-i18n="keys"></p>
+        <div id="thumbStrip" class="thumbs"></div>
+        <div id="groupBars" class="gbars"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="libBack" class="lib-back" hidden>
+  <aside class="lib" role="dialog" aria-modal="true" aria-labelledby="libTitle">
+    <div class="lib-head">
+      <h2 id="libTitle" data-i18n="lib"></h2>
+      <button id="btnCloseLib" type="button" data-i18n="close"></button>
+    </div>
+    <div id="libList"></div>
+    <div class="lib-actions">
+      <button id="btnClearLib" type="button" data-i18n="clearAll"></button>
+    </div>
+  </aside>
+</div>
+
+<div id="modal" class="modal-back" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle"></h3>
+    <p id="modalBody"></p>
+    <div class="modal-actions">
+      <button id="modalCancel" type="button"></button>
+      <button id="modalOk" type="button"></button>
+    </div>
+  </div>
+</div>
+<div id="player" class="player-back" hidden>
+  <div class="player" role="dialog" aria-modal="true" aria-labelledby="playerHeading">
+    <div class="player-rule"></div>
+    <div class="player-head">
+      <h2 id="playerHeading" tabindex="-1"></h2>
+      <button id="playerClose" type="button" data-i18n="close"></button>
+    </div>
+    <div class="stage-row">
+      <button id="playerPrev" class="arrow" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 L8 12 L15 19" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+      </button>
+      <div class="stage"><img id="playerImg" alt=""></div>
+      <button id="playerNext" class="arrow" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5 L16 12 L9 19" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+      </button>
+    </div>
+    <div class="stage-meta">
+      <p class="pos num" id="playerPos"></p>
+      <div class="age"><span id="playerAge" class="num"></span><span id="playerUnit" class="unit"></span></div>
+      <p class="pname" id="playerName"></p>
+      <p class="pgroup" id="playerGroup"></p>
+    </div>
+    <div class="player-progress" aria-hidden="true"><span id="playerFill"></span></div>
+    <div class="controls">
+      <button id="playerToggle" type="button" aria-pressed="false"></button>
+    </div>
+    <p class="hint center" data-i18n="playerKeys"></p>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'lifeStages_profiles';
+  var PAGE_W = 1080;
+  var PAGE_H = Math.round(1080 * 297 / 210);
+  var FONT_CN = '"Songti SC", STSong, "Noto Serif CJK SC", "WenQuanYi Zen Hei", serif';
+  var FONT_EN = 'Cambria, "Times New Roman", "Liberation Serif", serif';
+  var C = { bg: '#042352', deep: '#021533', surface: '#0b2d62', fg: '#f6f3ec', muted: '#9eb0c6', line: '#1d447c', accent: '#c9a36a' };
+
+  var GROUPS = [
+    { id: 'child', zh: '幼年', en: 'Childhood', min: 0, max: 6, range: '0–6' },
+    { id: 'juvenile', zh: '少年', en: 'Juvenile', min: 7, max: 12, range: '7–12' },
+    { id: 'teen', zh: '青少年', en: 'Adolescence', min: 13, max: 17, range: '13–17' },
+    { id: 'adult', zh: '成年', en: 'Adulthood', min: 18, max: Infinity, range: '18+' }
+  ];
+
+  var I18N = {
+    zh: {
+      title: '人生阶段',
+      subtitle: '按年龄顺序展示形象变化',
+      ind1: '填写名称', ind2: '上传照片', ind3: '填写年龄', ind4: '拖拽排序',
+      step1: '填写档案名称',
+      step2: '上传照片（自动裁剪为 3:4）',
+      step3: '填写年龄和照片名称',
+      step4: '拖拽缩略图调整顺序',
+      nameLabel: '档案名称',
+      namePh: '例如：张三',
+      nameHelp: '回车或失焦后保存',
+      recorded: '名称已保存',
+      unsaved: '未保存',
+      drop: '点击或拖拽上传照片',
+      dropSub: '可多张。自动居中裁剪为 3:4，不拉伸。',
+      uploaded: '已上传 {n} 张',
+      age: '年龄', required: '必填', photoName: '照片名称', optional: '选填',
+      photoPh: '选填',
+      remove: '移除',
+      noPhotos: '上传后在此填写年龄和照片名称。',
+      empty: '请先完成上方步骤：填写档案名称 → 上传照片 → 填写年龄',
+      play: '播放', stop: '停止',
+      playTitle: '播放',
+      export: '导出 PDF', exporting: '导出中',
+      exportVideo: '导出视频',
+      save: '保存到人物库',
+      sortAge: '按年龄排序',
+      orderManual: '当前顺序：手动',
+      orderAuto: '当前顺序：按年龄',
+      prev: '上一张', next: '下一张',
+      lib: '人物库', reset: '重置', close: '关闭', clearAll: '清空全部',
+      delete: '删除',
+      stages: '阶段总数', spanLabel: '年龄跨度', updated: '最后修改',
+      emptyLib: '人物库为空',
+      untitled: '未命名',
+      unit: '岁',
+      keys: '方向键切换 · 空格播放',
+      playerKeys: '方向键切换 · 空格暂停或继续 · Esc 关闭',
+      saved: '已保存到人物库',
+      exported: 'PDF 已导出',
+      exportedVideo: '视频已导出',
+      exportedPng: 'PDF 加载失败，已导出纵向长图 PNG',
+      exportFail: '导出失败',
+      badImage: '有照片无法读取，已跳过',
+      notImage: '请上传图片文件',
+      quota: '存储空间不足，未能保存。请减少照片数量。',
+      stageSlider: '阶段',
+      confirmResetTitle: '重置档案',
+      confirmResetBody: '将清空档案名称、全部照片和步骤进度。',
+      confirmResetOk: '确认重置',
+      confirmDelTitle: '删除此档案？',
+      confirmDelBody: '删除后不可恢复。',
+      confirmDelOk: '删除',
+      confirmClearTitle: '清空人物库？',
+      confirmClearBody: '将删除全部已保存档案。',
+      confirmClearOk: '清空全部',
+      confirmOpenTitle: '打开此档案？',
+      confirmOpenBody: '当前未保存的内容将被替换。',
+      confirmOpenOk: '打开',
+      confirmRemoveTitle: '移除此照片？',
+      confirmRemoveBody: '该照片会从当前档案中去掉。',
+      confirmRemoveOk: '移除',
+      cancel: '取消',
+      groupPending: '分组 · 待填写',
+      groupWord: '分组',
+      photosWord: '张',
+      stageWord: '个阶段'
+    },
+    en: {
+      title: 'Life Stages',
+      subtitle: 'Show how a person changes, in age order',
+      ind1: 'Type the name', ind2: 'Upload photo', ind3: 'Type the age', ind4: 'Drag to reorder',
+      step1: 'Type the name',
+      step2: 'Upload photo (auto-cropped to 3:4)',
+      step3: 'Type the age and photo name',
+      step4: 'Drag thumbnails to reorder',
+      nameLabel: 'Profile name',
+      namePh: 'e.g. Alex',
+      nameHelp: 'Press Enter or leave the field to save',
+      recorded: 'Name saved',
+      unsaved: 'Not saved',
+      drop: 'Click or drop photos here',
+      dropSub: 'Multiple files. Center-cropped to 3:4, no stretch.',
+      uploaded: '{n} uploaded',
+      age: 'Age', required: 'Required', photoName: 'Photo name', optional: 'Optional',
+      photoPh: 'Optional',
+      remove: 'Remove',
+      noPhotos: 'After upload, enter an age and an optional photo name here.',
+      empty: 'Complete the steps above: type the name → upload photos → enter ages',
+      play: 'Play', stop: 'Stop',
+      playTitle: 'Playback',
+      export: 'Export PDF', exporting: 'Exporting',
+      exportVideo: 'Export video',
+      save: 'Save to library',
+      sortAge: 'Sort by age',
+      orderManual: 'Order: manual',
+      orderAuto: 'Order: by age',
+      prev: 'Previous', next: 'Next',
+      lib: 'Library', reset: 'Reset', close: 'Close', clearAll: 'Clear all',
+      delete: 'Delete',
+      stages: 'Stages', spanLabel: 'Age span', updated: 'Updated',
+      emptyLib: 'Library is empty',
+      untitled: 'Untitled',
+      unit: 'yrs',
+      keys: 'Arrow keys switch · Space plays',
+      playerKeys: 'Arrows switch · Space pauses · Esc closes',
+      saved: 'Saved to library',
+      exported: 'PDF exported',
+      exportedVideo: 'Video exported',
+      exportedPng: 'PDF failed to load. Exported a tall PNG instead',
+      exportFail: 'Export failed',
+      badImage: 'Some photos could not be read and were skipped',
+      notImage: 'Please upload image files',
+      quota: 'Not enough local storage to save. Remove some photos.',
+      stageSlider: 'Stage',
+      confirmResetTitle: 'Reset profile',
+      confirmResetBody: 'This clears the name, all photos, and step progress.',
+      confirmResetOk: 'Reset',
+      confirmDelTitle: 'Delete this profile?',
+      confirmDelBody: 'This cannot be undone.',
+      confirmDelOk: 'Delete',
+      confirmClearTitle: 'Clear the library?',
+      confirmClearBody: 'Every saved profile will be removed.',
+      confirmClearOk: 'Clear all',
+      confirmOpenTitle: 'Open this profile?',
+      confirmOpenBody: 'Unsaved work will be replaced.',
+      confirmOpenOk: 'Open',
+      confirmRemoveTitle: 'Remove this photo?',
+      confirmRemoveBody: 'It will leave the current profile.',
+      confirmRemoveOk: 'Remove',
+      cancel: 'Cancel',
+      groupPending: 'Group · Required',
+      groupWord: 'Group',
+      photosWord: 'photos',
+      stageWord: 'stages'
+    }
+  };
+
+  var savedLang = null;
+  try { savedLang = localStorage.getItem('lifeStages_lang'); } catch (e) { savedLang = null; }
+
+  var state = {
+    lang: savedLang === 'en' ? 'en' : 'zh',
+    name: '',
+    photos: [],
+    manual: false,
+    index: 0,
+    playing: false,
+    timer: null,
+    activeProfileId: null,
+    sliderHold: false,
+    dragId: null,
+    exporting: false
+  };
+  var fadeToken = 0;
+  var busy = false;
+  var modalResolve = null;
+  var toastTimer = null;
+  var jspdfPromise = null;
+
+  function $(id) { return document.getElementById(id); }
+  function t(key) { return (I18N[state.lang] && I18N[state.lang][key]) || key; }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#39;' })[c];
+    });
+  }
+  function uid() { return 'p_' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36); }
+
+  function isValidAge(v) {
+    return typeof v === 'number' && v >= 0 && v <= 130 && Math.round(v) === v;
+  }
+  function parseAge(raw) {
+    if (raw === '' || raw == null) return null;
+    var s = String(raw).trim();
+    if (!/^\d+$/.test(s)) return null;
+    var n = Number(s);
+    if (n > 130) return null;
+    return n;
+  }
+  function groupOf(age) {
+    if (!isValidAge(age)) return null;
+    for (var i = 0; i < GROUPS.length; i++) {
+      if (age >= GROUPS[i].min && age <= GROUPS[i].max) return GROUPS[i];
+    }
+    return null;
+  }
+  function flags() {
+    var s1 = state.name.trim().length > 0;
+    var has = state.photos.length > 0;
+    var aged = has && state.photos.every(function (p) { return isValidAge(p.age); });
+    return { s1: s1, s2: s1 && has, s4: s1 && has && aged };
+  }
+  function spanText(min, max) {
+    return state.lang === 'zh' ? (min + '–' + max + '岁') : (min + '–' + max + ' yrs');
+  }
+  function countText(n) {
+    if (state.lang === 'zh') return n + ' 张';
+    return n === 1 ? '1 photo' : (n + ' photos');
+  }
+  function groupLine(age) {
+    var g = groupOf(age);
+    if (!g) return t('groupPending');
+    var name = state.lang === 'zh' ? (g.zh + ' ' + g.en) : (g.en + ' ' + g.zh);
+    return t('groupWord') + ' · ' + name + ' · ' + g.range;
+  }
+  function groupShort(age) {
+    var g = groupOf(age);
+    if (!g) return '';
+    return state.lang === 'zh' ? (g.zh + ' · ' + g.en) : (g.en + ' · ' + g.zh);
+  }
+  function displayTitle(photo) {
+    var s = (photo.title || '').trim();
+    return s || t('untitled');
+  }
+
+  /* 未完成手动排序时，按年龄升序；未填年龄的排在末尾。 */
+  function sortByAge() {
+    var id = state.photos[state.index] && state.photos[state.index].id;
+    state.photos.sort(function (a, b) {
+      var aa = isValidAge(a.age) ? a.age : 100000;
+      var bb = isValidAge(b.age) ? b.age : 100000;
+      if (aa !== bb) return aa - bb;
+      return (a.added || 0) - (b.added || 0);
+    });
+    reindex(id);
+  }
+  function reindex(id) {
+    if (!state.photos.length) { state.index = 0; return; }
+    if (!id) {
+      state.index = Math.max(0, Math.min(state.index, state.photos.length - 1));
+      return;
+    }
+    var i = state.photos.findIndex(function (p) { return p.id === id; });
+    state.index = i >= 0 ? i : Math.max(0, Math.min(state.index, state.photos.length - 1));
+  }
+  function nearestIndex(v) {
+    var n = state.photos.length;
+    if (n <= 1) return 0;
+    var x = Math.round(Number(v));
+    if (!isFinite(x)) return state.index;
+    return Math.max(0, Math.min(n - 1, x));
+  }
+
+  function applyI18n() {
+    document.documentElement.lang = state.lang === 'zh' ? 'zh-CN' : 'en';
+    document.title = state.lang === 'zh' ? '人物 · 人生阶段' : 'People · Life Stages';
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+    });
+    $('btnLang').textContent = state.lang === 'zh' ? 'EN' : '中文';
+    $('btnLang').setAttribute('aria-label', state.lang === 'zh' ? 'Switch to English' : '切换到中文');
+    $('btnPrev').setAttribute('aria-label', t('prev'));
+    $('btnNext').setAttribute('aria-label', t('next'));
+    $('playerPrev').setAttribute('aria-label', t('prev'));
+    $('playerNext').setAttribute('aria-label', t('next'));
+    $('slider').setAttribute('aria-label', t('stageSlider'));
+    $('btnSave').textContent = t('save');
+    $('btnSort').textContent = t('sortAge');
+    if (!state.exporting) {
+      $('btnExport').textContent = t('export');
+      $('btnExportVideo').textContent = t('exportVideo');
+    }
+    updatePlayButton();
+    updatePlayerToggle();
+  }
+
+  function renderNameState() {
+    var el = $('nameState');
+    var typed = $('nameInput').value.trim();
+    var dirty = typed !== state.name;
+    if (state.name && !dirty) {
+      el.textContent = t('recorded');
+      el.classList.add('is-ok');
+    } else if (dirty && typed) {
+      el.textContent = t('unsaved');
+      el.classList.remove('is-ok');
+    } else {
+      el.textContent = '';
+      el.classList.remove('is-ok');
+    }
+  }
+  function renderUploadCount() {
+    var n = state.photos.length;
+    $('uploadCount').textContent = n ? t('uploaded').replace('{n}', String(n)) : '';
+  }
+  function renderProgress() {
+    var f = flags();
+    var cur = !f.s1 ? 1 : !f.s2 ? 2 : !f.s4 ? 3 : 4;
+    var done = [f.s1, f.s2, f.s4, f.s4];
+    document.querySelectorAll('#progress li').forEach(function (li, i) {
+      li.classList.toggle('is-done', !!done[i]);
+      li.classList.toggle('is-current', cur === i + 1);
+    });
+    ['panel1', 'panel2', 'panel3', 'panel4'].forEach(function (id, i) {
+      $(id).classList.toggle('is-current', cur === i + 1);
+    });
+    $('panel2').classList.toggle('is-locked', !f.s1);
+    $('panel3').classList.toggle('is-locked', !f.s2);
+    $('panel4').classList.toggle('is-locked', !f.s4);
+    var show = f.s4 && state.photos.length > 0;
+    $('empty').hidden = show;
+    $('viewer').hidden = !show;
+    if (!show) closePlayer();
+  }
+  function renderEditList() {
+    var box = $('editList');
+    if (!state.photos.length) {
+      box.innerHTML = '<p class="hint">' + esc(t('noPhotos')) + '</p>';
+      return;
+    }
+    var scroll = box.scrollTop;
+    box.innerHTML = state.photos.map(function (p, i) {
+      var ageVal = isValidAge(p.age) ? String(p.age) : '';
+      return '<article class="edit" data-id="' + esc(p.id) + '">' +
+        '<div class="shot-wrap"><span class="shot-idx num">' + esc(String(i + 1).padStart(2, '0')) + '</span>' +
+        '<img class="shot" alt="" src="' + p.src + '"></div>' +
+        '<div class="fields">' +
+          '<label class="field"><span>' + esc(t('age')) + ' · ' + esc(t('required')) + '</span>' +
+            '<input data-field="age" type="number" min="0" max="130" step="1" inputmode="numeric" value="' + ageVal + '"></label>' +
+          '<label class="field"><span>' + esc(t('photoName')) + ' · ' + esc(t('optional')) + '</span>' +
+            '<input data-field="title" type="text" maxlength="80" autocomplete="off" placeholder="' + esc(t('photoPh')) + '" value="' + esc(p.title || '') + '"></label>' +
+          '<p class="grow" data-group>' + esc(groupLine(p.age)) + '</p>' +
+          '<button class="remove" type="button" data-remove>' + esc(t('remove')) + '</button>' +
+        '</div></article>';
+    }).join('');
+    box.scrollTop = scroll;
+  }
+  function renderThumbs() {
+    var strip = $('thumbStrip');
+    if (!flags().s4) { strip.innerHTML = ''; return; }
+    var cur = state.photos[state.index] && state.photos[state.index].id;
+    var prev = null;
+    var html = '';
+    state.photos.forEach(function (p) {
+      var g = groupOf(p.age);
+      if (g && g.id !== prev) {
+        html += '<div class="gdiv"><span class="gdiv-zh">' + esc(g.zh) + '</span><span class="gdiv-en">' + esc(g.en) + '</span><span class="num">' + esc(g.range) + '</span></div>';
+        prev = g.id;
+      }
+      var on = p.id === cur ? ' is-on' : '';
+      var ageLabel = isValidAge(p.age) ? String(p.age) : '–';
+      html += '<div class="titem"><div class="thumb' + on + '" draggable="true" data-id="' + esc(p.id) + '" role="button" tabindex="0" aria-label="' + esc(displayTitle(p)) + '">' +
+        '<img alt="" src="' + p.src + '" draggable="false"></div>' +
+        '<span class="tage num">' + esc(ageLabel) + '</span></div>';
+    });
+    strip.innerHTML = html;
+  }
+  function markThumb() {
+    var id = state.photos[state.index] && state.photos[state.index].id;
+    document.querySelectorAll('.thumb').forEach(function (el) {
+      el.classList.toggle('is-on', el.dataset.id === id);
+    });
+  }
+  function renderGroupBars() {
+    var el = $('groupBars');
+    if (!flags().s4) { el.innerHTML = ''; return; }
+    var html = '';
+    GROUPS.forEach(function (g) {
+      var items = state.photos.filter(function (p) { return groupOf(p.age) && groupOf(p.age).id === g.id; });
+      if (!items.length) return;
+      var ages = items.map(function (p) { return p.age; });
+      var min = Math.min.apply(null, ages);
+      var max = Math.max.apply(null, ages);
+      var name = state.lang === 'zh' ? g.zh : g.en;
+      var other = state.lang === 'zh' ? g.en : g.zh;
+      html += '<div class="gbar"><b>' + esc(name) + '</b><span class="en">' + esc(other) + '</span><span class="num">' + esc(spanText(min, max)) + '</span><span>' + esc(countText(items.length)) + '</span></div>';
+    });
+    el.innerHTML = html;
+  }
+  function renderOrder() {
+    $('orderMode').textContent = state.manual ? t('orderManual') : t('orderAuto');
+  }
+  function setPhotoSrc(img, photo, animate) {
+    if (img.dataset.pid === photo.id && img.getAttribute('src')) return;
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function apply() {
+      img.src = photo.src;
+      img.dataset.pid = photo.id;
+      img.style.opacity = '1';
+    }
+    if (!animate || reduce || !img.getAttribute('src')) { apply(); return; }
+    var token = String(++fadeToken);
+    img.dataset.fade = token;
+    img.style.opacity = '0';
+    window.setTimeout(function () {
+      if (img.dataset.fade !== token) return;
+      apply();
+    }, 180);
+  }
+  function renderStage(opts) {
+    opts = opts || {};
+    var photo = state.photos[state.index];
+    if (!photo) return;
+    var slider = $('slider');
+    slider.max = String(Math.max(0, state.photos.length - 1));
+    if (!state.sliderHold) slider.value = String(state.index);
+    setPhotoSrc($('stageImg'), photo, !!opts.animate);
+    $('stageAge').textContent = isValidAge(photo.age) ? String(photo.age) : '–';
+    $('stageUnit').textContent = t('unit');
+    var named = (photo.title || '').trim();
+    var titleEl = $('stageTitle');
+    titleEl.textContent = named || t('untitled');
+    titleEl.classList.toggle('is-empty', !named);
+    $('stageGroup').textContent = groupShort(photo.age);
+    $('stagePos').textContent = String(state.index + 1).padStart(2, '0') + ' / ' + String(state.photos.length).padStart(2, '0');
+    $('stageImg').alt = displayTitle(photo) + (isValidAge(photo.age) ? ', ' + photo.age + ' ' + t('unit') : '');
+  }
+  function renderAll() {
+    applyI18n();
+    renderNameState();
+    renderUploadCount();
+    renderProgress();
+    renderEditList();
+    renderThumbs();
+    renderGroupBars();
+    renderStage();
+    renderPlayer(false);
+    renderOrder();
+    if (!$('libBack').hidden) renderLibrary();
+  }
+
+  function goTo(index, animate) {
+    if (!state.photos.length) return;
+    var n = state.photos.length;
+    state.index = ((index % n) + n) % n;
+    renderStage({ animate: animate });
+    renderPlayer(!!animate);
+    markThumb();
+    var on = document.querySelector('.thumb.is-on');
+    if (on && on.scrollIntoView) on.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+  }
+
+  function updatePlayButton() {
+    var btn = $('btnPlay');
+    if (!btn) return;
+    btn.textContent = t('play');
+    btn.classList.remove('is-active');
+    btn.setAttribute('aria-pressed', 'false');
+  }
+  function updatePlayerToggle() {
+    var btn = $('playerToggle');
+    if (!btn) return;
+    var on = state.playing && !$('player').hidden;
+    btn.textContent = on ? t('stop') : t('play');
+    btn.classList.toggle('is-active', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function renderPlayer(animate) {
+    if ($('player').hidden) return;
+    var photo = state.photos[state.index];
+    if (!photo) { closePlayer(); return; }
+    setPhotoSrc($('playerImg'), photo, !!animate);
+    $('playerAge').textContent = isValidAge(photo.age) ? String(photo.age) : '–';
+    $('playerUnit').textContent = t('unit');
+    var named = (photo.title || '').trim();
+    var titleEl = $('playerName');
+    titleEl.textContent = named || t('untitled');
+    titleEl.classList.toggle('is-empty', !named);
+    $('playerGroup').textContent = groupShort(photo.age);
+    $('playerPos').textContent = String(state.index + 1).padStart(2, '0') + ' / ' + String(state.photos.length).padStart(2, '0');
+    $('playerImg').alt = displayTitle(photo) + (isValidAge(photo.age) ? ', ' + photo.age + ' ' + t('unit') : '');
+    var n = state.photos.length;
+    $('playerFill').style.width = (n <= 1 ? 100 : (state.index / (n - 1)) * 100) + '%';
+    $('playerHeading').textContent = state.name ? (t('playTitle') + ' · ' + state.name) : t('playTitle');
+    updatePlayerToggle();
+  }
+  function stopPlay() {
+    state.playing = false;
+    if (state.timer) window.clearInterval(state.timer);
+    state.timer = null;
+    updatePlayerToggle();
+  }
+  function startPlay() {
+    if ($('player').hidden || !flags().s4 || !state.photos.length || state.playing) return;
+    state.playing = true;
+    state.timer = window.setInterval(function () {
+      if ($('player').hidden || !flags().s4 || !state.photos.length) { closePlayer(); return; }
+      goTo(state.index + 1, true);
+    }, 1600);
+    updatePlayerToggle();
+  }
+  function openPlayer() {
+    if (!flags().s4 || !state.photos.length || !$('player').hidden) return;
+    $('player').hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+    renderPlayer(false);
+    startPlay();
+    $('playerHeading').focus();
+  }
+  function closePlayer() {
+    stopPlay();
+    if ($('player').hidden) return;
+    $('player').hidden = true;
+    document.documentElement.style.overflow = '';
+    var img = $('playerImg');
+    img.removeAttribute('src');
+    delete img.dataset.pid;
+    if ($('btnPlay')) $('btnPlay').focus();
+  }
+
+  function commitName() {
+    state.name = $('nameInput').value.trim();
+    $('nameInput').value = state.name;
+    renderNameState();
+    renderProgress();
+    if (!$('libBack').hidden) renderLibrary();
+  }
+
+  /* 原图偏宽裁左右，偏高裁上下，输出固定 3:4，不拉伸。 */
+  function cropTo34(img) {
+    var ratio = 3 / 4;
+    var sr = img.width / img.height;
+    var sx = 0, sy = 0, sw = img.width, sh = img.height;
+    if (sr > ratio) {
+      sh = img.height;
+      sw = sh * ratio;
+      sx = (img.width - sw) / 2;
+    } else {
+      sw = img.width;
+      sh = sw / ratio;
+      sy = (img.height - sh) / 2;
+    }
+    sx = Math.max(0, Math.round(sx));
+    sy = Math.max(0, Math.round(sy));
+    sw = Math.min(img.width - sx, Math.round(sw));
+    sh = Math.min(img.height - sy, Math.round(sh));
+    var canvas = document.createElement('canvas');
+    canvas.width = 750;
+    canvas.height = 1000;
+    var ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 750, 1000);
+    return canvas.toDataURL('image/jpeg', 0.84);
+  }
+  function fileToImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        if (!img.width || !img.height) reject(new Error('empty'));
+        else resolve(img);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('read')); };
+      img.src = url;
+    });
+  }
+  async function addFiles(fileList) {
+    if (busy || !flags().s1) return;
+    var files = Array.prototype.filter.call(fileList, function (f) { return f.type && f.type.indexOf('image/') === 0; });
+    if (!files.length) { toast(t('notImage')); return; }
+    busy = true;
+    $('drop').setAttribute('aria-busy', 'true');
+    var failed = 0;
+    var focusId = state.photos[state.index] && state.photos[state.index].id;
+    for (var i = 0; i < files.length; i++) {
+      try {
+        var img = await fileToImage(files[i]);
+        state.photos.push({ id: uid(), src: cropTo34(img), age: null, title: '', added: Date.now() + i });
+      } catch (e) { failed += 1; }
+    }
+    if (!state.manual) sortByAge();
+    else reindex(focusId);
+    busy = false;
+    $('drop').removeAttribute('aria-busy');
+    if (failed) toast(t('badImage'));
+    renderAll();
+  }
+
+  /* 手动顺序覆盖自动排序；拖完后仍停在同一张照片。 */
+  function reorder(srcId, targetId, clientX, targetEl) {
+    if (!srcId || !targetId || srcId === targetId) return;
+    var focusId = state.photos[state.index] && state.photos[state.index].id;
+    var from = state.photos.findIndex(function (p) { return p.id === srcId; });
+    if (from < 0) return;
+    var item = state.photos.splice(from, 1)[0];
+    var to = state.photos.findIndex(function (p) { return p.id === targetId; });
+    if (to < 0) state.photos.push(item);
+    else {
+      var after = false;
+      if (targetEl && clientX != null) {
+        var rect = targetEl.getBoundingClientRect();
+        after = clientX > rect.left + rect.width / 2;
+      }
+      state.photos.splice(to + (after ? 1 : 0), 0, item);
+    }
+    state.manual = true;
+    reindex(focusId);
+    renderEditList();
+    renderThumbs();
+    renderGroupBars();
+    renderStage({ animate: false });
+    renderOrder();
+  }
+  function moveToEnd(srcId) {
+    var focusId = state.photos[state.index] && state.photos[state.index].id;
+    var from = state.photos.findIndex(function (p) { return p.id === srcId; });
+    if (from < 0 || from === state.photos.length - 1) return;
+    var item = state.photos.splice(from, 1)[0];
+    state.photos.push(item);
+    state.manual = true;
+    reindex(focusId);
+    renderEditList();
+    renderThumbs();
+    renderGroupBars();
+    renderStage({ animate: false });
+    renderOrder();
+  }
+
+  function loadProfiles() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      return Array.isArray(raw) ? raw.filter(function (p) { return p && typeof p === 'object'; }) : [];
+    } catch (e) { return []; }
+  }
+  function coverOf(photos) {
+    var best = null;
+    (photos || []).forEach(function (p) {
+      if (!p || !p.src || !isValidAge(p.age)) return;
+      if (!best || p.age >= best.age) best = p;
+    });
+    return best || (photos && photos[0]) || null;
+  }
+  function ageSpan(photos) {
+    var ages = (photos || []).map(function (p) { return Number(p.age); }).filter(function (n) { return isFinite(n) && n >= 0 && n <= 130; });
+    if (!ages.length) return '—';
+    return spanText(Math.min.apply(null, ages), Math.max.apply(null, ages));
+  }
+  function formatTime(ts) {
+    if (!ts) return '—';
+    try {
+      return new Date(ts).toLocaleString(state.lang === 'zh' ? 'zh-CN' : 'en-GB', {
+        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+      });
+    } catch (e) { return '—'; }
+  }
+  function snapshot() {
+    return JSON.stringify({
+      name: state.name,
+      manual: state.manual,
+      photos: state.photos.map(function (p) {
+        return { id: p.id, src: p.src, age: p.age, title: p.title, added: p.added };
+      })
+    });
+  }
+  function isDirty() {
+    if (!state.activeProfileId) return !!(state.name || state.photos.length);
+    var rec = loadProfiles().find(function (p) { return p.id === state.activeProfileId; });
+    if (!rec) return true;
+    var saved = JSON.stringify({
+      name: rec.name || '',
+      manual: !!rec.manual,
+      photos: (rec.photos || []).map(function (p) {
+        return { id: p.id, src: p.src, age: parseAge(p.age), title: String(p.title || ''), added: Number(p.added) || 0 };
+      })
+    });
+    return saved !== snapshot();
+  }
+  function viewOf(rec) {
+    if (rec.id && rec.id === state.activeProfileId) {
+      return { id: rec.id, name: state.name, manual: state.manual, photos: state.photos, updatedAt: rec.updatedAt };
+    }
+    return rec;
+  }
+  function renderLibrary() {
+    var list = $('libList');
+    var profiles = loadProfiles().slice().sort(function (a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); });
+    $('btnClearLib').disabled = profiles.length === 0;
+    if (!profiles.length) {
+      list.innerHTML = '<p class="hint">' + esc(t('emptyLib')) + '</p>';
+      return;
+    }
+    list.innerHTML = profiles.map(function (rec) {
+      var view = viewOf(rec);
+      var photos = view.photos || [];
+      var cover = coverOf(photos);
+      var src = cover && cover.src ? cover.src : '';
+      var dirty = rec.id === state.activeProfileId && isDirty();
+      return '<div class="lib-card" data-open="' + esc(rec.id) + '">' +
+        (src ? '<img alt="" src="' + src + '">' : '<img alt="" style="background:var(--deep)">') +
+        '<div><h3>' + esc(view.name || t('untitled')) + '</h3>' +
+        '<p class="meta-line"><span>' + esc(t('stages')) + '</span> <b class="num">' + photos.length + '</b></p>' +
+        '<p class="meta-line"><span>' + esc(t('spanLabel')) + '</span> <b class="num">' + esc(ageSpan(photos)) + '</b></p>' +
+        '<p class="meta-line"><span>' + esc(t('updated')) + '</span> ' + esc(formatTime(rec.updatedAt)) + '</p>' +
+        (dirty ? '<p class="meta-line is-accent">' + esc(t('unsaved')) + '</p>' : '') +
+        '<button type="button" data-del="' + esc(rec.id) + '">' + esc(t('delete')) + '</button></div></div>';
+    }).join('');
+  }
+  function closeLib() { $('libBack').hidden = true; }
+  function openLib() { renderLibrary(); $('libBack').hidden = false; $('btnCloseLib').focus(); }
+  function applyRecord(rec) {
+    closePlayer();
+    state.activeProfileId = rec.id;
+    state.name = String(rec.name || '');
+    state.manual = !!rec.manual;
+    state.photos = (rec.photos || []).filter(function (p) { return p && p.src; }).map(function (p) {
+      return { id: p.id || uid(), src: p.src, age: parseAge(p.age), title: String(p.title || ''), added: Number(p.added) || 0 };
+    });
+    state.index = 0;
+    state.sliderHold = false;
+    $('nameInput').value = state.name;
+    var img = $('stageImg');
+    img.removeAttribute('src');
+    delete img.dataset.pid;
+    renderAll();
+    window.scrollTo(0, 0);
+  }
+  async function openProfile(id) {
+    if (id === state.activeProfileId && !isDirty()) { closeLib(); return; }
+    if (isDirty()) {
+      var ok = await askConfirm(t('confirmOpenTitle'), t('confirmOpenBody'), t('confirmOpenOk'), t('cancel'));
+      if (!ok) return;
+    }
+    var rec = loadProfiles().find(function (p) { return p.id === id; });
+    if (!rec) return;
+    applyRecord(rec);
+    closeLib();
+  }
+  async function deleteProfile(id) {
+    var ok = await askConfirm(t('confirmDelTitle'), t('confirmDelBody'), t('confirmDelOk'), t('cancel'));
+    if (!ok) return;
+    var next = loadProfiles().filter(function (p) { return p.id !== id; });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    if (state.activeProfileId === id) state.activeProfileId = null;
+    renderLibrary();
+  }
+  function saveProfile() {
+    if (!flags().s4) return;
+    var profiles = loadProfiles();
+    var rec = {
+      id: state.activeProfileId || uid(),
+      name: state.name,
+      manual: state.manual,
+      photos: state.photos.map(function (p) {
+        return { id: p.id, src: p.src, age: p.age, title: p.title, added: p.added };
+      }),
+      updatedAt: Date.now()
+    };
+    var i = profiles.findIndex(function (p) { return p.id === rec.id; });
+    if (i >= 0) profiles[i] = rec;
+    else profiles.unshift(rec);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles)); }
+    catch (e) { toast(t('quota')); return; }
+    state.activeProfileId = rec.id;
+    toast(t('saved'));
+    renderLibrary();
+  }
+
+  function askConfirm(title, body, okText, cancelText) {
+    return new Promise(function (resolve) {
+      modalResolve = resolve;
+      $('modalTitle').textContent = title;
+      $('modalBody').textContent = body;
+      $('modalOk').textContent = okText;
+      $('modalCancel').textContent = cancelText;
+      $('modal').hidden = false;
+      $('modalOk').focus();
+    });
+  }
+  function closeModal(val) {
+    $('modal').hidden = true;
+    var r = modalResolve;
+    modalResolve = null;
+    if (r) r(!!val);
+  }
+  function toast(msg) {
+    var el = $('toast');
+    el.textContent = msg;
+    el.hidden = false;
+    if (toastTimer) window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(function () { el.hidden = true; }, 2400);
+  }
+  function overlayOpen() { return !$('modal').hidden || !$('libBack').hidden || !$('player').hidden; }
+
+  function getJsPDF() {
+    var lib = window.jspdf;
+    return lib && (lib.jsPDF || lib.default);
+  }
+  function loadJsPDF() {
+    var existing = getJsPDF();
+    if (existing) return Promise.resolve(existing);
+    if (jspdfPromise) return jspdfPromise;
+    jspdfPromise = new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      var timer = window.setTimeout(function () { reject(new Error('timeout')); }, 10000);
+      s.onload = function () {
+        window.clearTimeout(timer);
+        var Ctor = getJsPDF();
+        if (Ctor) resolve(Ctor); else reject(new Error('missing'));
+      };
+      s.onerror = function () { window.clearTimeout(timer); reject(new Error('load')); };
+      document.head.appendChild(s);
+    });
+    jspdfPromise.catch(function () { jspdfPromise = null; });
+    return jspdfPromise;
+  }
+  function fileBase() {
+    var ages = state.photos.map(function (p) { return Number(p.age); }).filter(function (n) { return isFinite(n); });
+    var min = Math.min.apply(null, ages);
+    var max = Math.max.apply(null, ages);
+    var name = (state.name || 'profile').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'profile';
+    return name + '-' + min + '-' + max;
+  }
+  function downloadBlob(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 2500);
+  }
+  function loadOne(src) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () { resolve(img); };
+      img.onerror = function () { reject(new Error('img')); };
+      img.src = src;
+    });
+  }
+  function drawPhoto(ctx, img, x, y, w, h) {
+    ctx.save();
+    ctx.fillStyle = C.deep;
+    ctx.fillRect(x, y, w, h);
+    if (img) {
+      ctx.beginPath();
+      ctx.rect(x, y, w, h);
+      ctx.clip();
+      ctx.drawImage(img, x, y, w, h);
+    }
+    ctx.restore();
+    ctx.strokeStyle = C.line;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  }
+  function wrapText(ctx, text, x, y, maxW, lineH) {
+    var tokens = String(text).indexOf(' ') >= 0 ? String(text).split(' ') : Array.from(String(text));
+    var space = String(text).indexOf(' ') >= 0;
+    var line = '';
+    var cy = y;
+    tokens.forEach(function (tok, idx) {
+      var test = line ? (space ? line + ' ' + tok : line + tok) : tok;
+      if (ctx.measureText(test).width > maxW && line) {
+        ctx.fillText(line, x, cy);
+        line = tok;
+        cy += lineH;
+      } else line = test;
+    });
+    if (line) { ctx.fillText(line, x, cy); cy += lineH; }
+    return cy;
+  }
+  function drawCover(ctx, imgs) {
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, PAGE_W, PAGE_H);
+    ctx.fillStyle = C.accent;
+    ctx.fillRect(0, 0, PAGE_W, 8);
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = C.accent;
+    ctx.font = '16px ' + FONT_EN;
+    ctx.fillText(state.lang === 'zh' ? '人物  /  PEOPLE' : 'PEOPLE  /  人物', 72, 48);
+    ctx.fillStyle = C.fg;
+    ctx.font = (state.lang === 'zh' ? '52px ' + FONT_CN : '48px ' + FONT_EN);
+    wrapText(ctx, state.name || t('untitled'), 72, 88, PAGE_W - 144, 64);
+    ctx.strokeStyle = C.accent;
+    ctx.beginPath();
+    ctx.moveTo(72, 230);
+    ctx.lineTo(PAGE_W - 72, 230);
+    ctx.stroke();
+    var ages = state.photos.map(function (p) { return p.age; });
+    var min = Math.min.apply(null, ages);
+    var max = Math.max.apply(null, ages);
+    var groups = GROUPS.filter(function (g) {
+      return state.photos.some(function (p) { return groupOf(p.age) && groupOf(p.age).id === g.id; });
+    }).map(function (g) { return state.lang === 'zh' ? g.zh : g.en; }).join(' / ');
+    ctx.fillStyle = C.muted;
+    ctx.font = '20px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    var meta = state.lang === 'zh'
+      ? (state.photos.length + ' 个阶段 · ' + min + '–' + max + '岁 · ' + groups)
+      : (state.photos.length + ' stages · ' + min + '–' + max + ' yrs · ' + groups);
+    wrapText(ctx, meta, 72, 248, PAGE_W - 144, 28);
+    drawPhoto(ctx, imgs[0], 72, 320, 480, 640);
+    ctx.fillStyle = C.muted;
+    ctx.font = '16px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    ctx.fillText(t('stages'), 588, 340);
+    ctx.fillStyle = C.accent;
+    ctx.font = '64px ' + FONT_EN;
+    ctx.fillText(String(state.photos.length), 588, 368);
+    ctx.fillStyle = C.muted;
+    ctx.font = '16px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    ctx.fillText(t('spanLabel'), 588, 470);
+    ctx.fillStyle = C.accent;
+    ctx.font = '36px ' + FONT_EN;
+    ctx.fillText(min + '–' + max, 588, 500);
+    ctx.fillStyle = C.muted;
+    ctx.font = '16px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    ctx.fillText(t('groupWord'), 588, 580);
+    ctx.fillStyle = C.fg;
+    ctx.font = '22px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    wrapText(ctx, groups || '—', 588, 612, 400, 32);
+
+    var cellW = 460, cellH = 220, gap = 16, gx = 72, gy = 1000;
+    GROUPS.forEach(function (g, i) {
+      var col = i % 2, row = Math.floor(i / 2);
+      var x = gx + col * (cellW + gap);
+      var y = gy + row * (cellH + gap);
+      var items = state.photos.filter(function (p) { return groupOf(p.age) && groupOf(p.age).id === g.id; });
+      ctx.fillStyle = C.surface;
+      ctx.fillRect(x, y, cellW, cellH);
+      ctx.strokeStyle = C.line;
+      ctx.strokeRect(x + 0.5, y + 0.5, cellW - 1, cellH - 1);
+      ctx.fillStyle = C.accent;
+      ctx.font = '26px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+      ctx.fillText(state.lang === 'zh' ? g.zh : g.en, x + 20, y + 24);
+      ctx.fillStyle = C.muted;
+      ctx.font = '16px ' + FONT_EN;
+      ctx.fillText(state.lang === 'zh' ? g.en : g.zh, x + 20, y + 64);
+      ctx.font = '18px ' + FONT_EN;
+      ctx.fillText(g.range, x + 20, y + 96);
+      ctx.fillStyle = C.fg;
+      ctx.font = '28px ' + FONT_EN;
+      ctx.fillText(String(items.length), x + 20, y + 140);
+      ctx.fillStyle = C.muted;
+      ctx.font = '14px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+      ctx.fillText(state.lang === 'zh' ? '张' : 'photos', x + 20, y + 176);
+      if (items.length) {
+        var idx = state.photos.indexOf(items[0]);
+        drawPhoto(ctx, imgs[idx], x + cellW - 150, y + 20, 126, 168);
+      }
+    });
+    ctx.fillStyle = C.muted;
+    ctx.font = '14px ' + FONT_EN;
+    ctx.fillText('人物  ·  PEOPLE', 72, PAGE_H - 48);
+  }
+  function drawAgeBar(ctx, x, y, w, h, current) {
+    ctx.fillStyle = C.surface;
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = C.line;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    var ages = state.photos.map(function (p) { return Number(p.age); });
+    var min = Math.min.apply(null, ages);
+    var max = Math.max.apply(null, ages);
+    var span = Math.max(1, max - min);
+    ages.forEach(function (age, i) {
+      var px = x + 10 + ((age - min) / span) * (w - 20);
+      ctx.fillStyle = i === current ? C.accent : C.muted;
+      var tw = i === current ? 4 : 2;
+      ctx.fillRect(px - tw / 2, y + 8, tw, h - 16);
+    });
+    ctx.fillStyle = C.muted;
+    ctx.font = '14px ' + FONT_EN;
+    ctx.fillText(String(min), x, y + h + 10);
+    var maxLabel = String(max);
+    ctx.fillText(maxLabel, x + w - ctx.measureText(maxLabel).width, y + h + 10);
+  }
+  function drawStage(ctx, imgs, index) {
+    var photo = state.photos[index];
+    var g = groupOf(photo.age);
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, PAGE_W, PAGE_H);
+    ctx.fillStyle = C.accent;
+    ctx.fillRect(0, 0, PAGE_W, 8);
+    ctx.textBaseline = 'top';
+    ctx.font = '20px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    ctx.fillStyle = C.accent;
+    ctx.fillText(g ? (state.lang === 'zh' ? g.zh + '  ' + g.en : g.en + '  ' + g.zh) : '', 72, 40);
+    ctx.font = '18px ' + FONT_EN;
+    ctx.fillStyle = C.muted;
+    var pos = String(index + 1).padStart(2, '0') + ' / ' + String(state.photos.length).padStart(2, '0');
+    ctx.fillText(pos, PAGE_W - 72 - ctx.measureText(pos).width, 42);
+    var pw = 540, ph = 720;
+    drawPhoto(ctx, imgs[index], (PAGE_W - pw) / 2, 100, pw, ph);
+    ctx.fillStyle = C.accent;
+    ctx.font = '96px ' + FONT_EN;
+    var ageStr = String(photo.age);
+    ctx.fillText(ageStr, 72, 850);
+    var ageW = ctx.measureText(ageStr).width;
+    ctx.font = '22px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    ctx.fillText(t('unit'), 72 + ageW + 12, 910);
+    ctx.fillStyle = C.fg;
+    ctx.font = '32px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    wrapText(ctx, displayTitle(photo), 72, 980, PAGE_W - 144, 42);
+    ctx.fillStyle = C.muted;
+    ctx.font = '18px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    ctx.fillText(groupLine(photo.age), 72, 1080);
+    ctx.fillStyle = C.muted;
+    ctx.font = '14px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    ctx.fillText(state.lang === 'zh' ? '年龄分布' : 'Age spread', 72, 1188);
+    drawAgeBar(ctx, 72, 1216, PAGE_W - 144, 36, index);
+    ctx.fillStyle = C.muted;
+    ctx.font = '14px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    ctx.fillText(state.name || '', 72, PAGE_H - 48);
+  }
+  function renderPages(imgs) {
+    var canvas = document.createElement('canvas');
+    canvas.width = PAGE_W;
+    canvas.height = PAGE_H;
+    var ctx = canvas.getContext('2d');
+    var urls = [];
+    drawCover(ctx, imgs);
+    urls.push(canvas.toDataURL('image/jpeg', 0.86));
+    state.photos.forEach(function (_, i) {
+      drawStage(ctx, imgs, i);
+      urls.push(canvas.toDataURL('image/jpeg', 0.86));
+    });
+    return urls;
+  }
+  async function stackJpegs(urls) {
+    var imgs = [];
+    for (var i = 0; i < urls.length; i++) imgs.push(await loadOne(urls[i]));
+    var scale = 1;
+    if (PAGE_H * imgs.length > 16000) scale = 16000 / (PAGE_H * imgs.length);
+    var tall = document.createElement('canvas');
+    tall.width = Math.max(1, Math.round(PAGE_W * scale));
+    tall.height = Math.max(1, Math.round(PAGE_H * imgs.length * scale));
+    var ctx = tall.getContext('2d');
+    imgs.forEach(function (img, i) {
+      ctx.drawImage(img, 0, Math.round(i * PAGE_H * scale), Math.round(PAGE_W * scale), Math.round(PAGE_H * scale));
+    });
+    return tall;
+  }
+  async function exportPdf() {
+    if (state.exporting || !flags().s4) return;
+    state.exporting = true;
+    var btn = $('btnExport');
+    var vid = $('btnExportVideo');
+    btn.disabled = true;
+    vid.disabled = true;
+    btn.textContent = t('exporting');
+    try {
+      var imgs = [];
+      for (var i = 0; i < state.photos.length; i++) imgs.push(await loadOne(state.photos[i].src));
+      var urls = renderPages(imgs);
+      var base = fileBase();
+      try {
+        var JsPDF = await loadJsPDF();
+        var pdf = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        urls.forEach(function (url, i) {
+          if (i > 0) pdf.addPage();
+          pdf.addImage(url, 'JPEG', 0, 0, 210, 297);
+        });
+        pdf.save(base + '.pdf');
+        toast(t('exported'));
+      } catch (err) {
+        var tall = await stackJpegs(urls);
+        var blob = await new Promise(function (resolve) { tall.toBlob(resolve, 'image/png'); });
+        if (!blob) throw new Error('png');
+        downloadBlob(blob, base + '.png');
+        toast(t('exportedPng'));
+      }
+    } catch (err) {
+      toast(t('exportFail'));
+    } finally {
+      state.exporting = false;
+      btn.disabled = false;
+      vid.disabled = false;
+      btn.textContent = t('export');
+      vid.textContent = t('exportVideo');
+    }
+  }
+
+  var VIDEO_W = 720;
+  var VIDEO_H = 1280;
+  var mbPromise = null;
+
+  function loadMediabunny() {
+    if (mbPromise) return mbPromise;
+    var urls = [];
+    try { urls.push(new URL('/vendor/mediabunny.js', window.parent.location.href).href); } catch (e) { /* srcdoc */ }
+    urls.push(new URL('/vendor/mediabunny.js', window.location.href).href);
+    urls.push('https://cdn.jsdelivr.net/npm/mediabunny@1.61.4/+esm');
+    mbPromise = (async function () {
+      var last = new Error('mediabunny');
+      for (var i = 0; i < urls.length; i++) {
+        try { return await import(urls[i]); }
+        catch (err) { last = err; }
+      }
+      throw last;
+    })();
+    mbPromise.catch(function () { mbPromise = null; });
+    return mbPromise;
+  }
+  function wrapCenter(ctx, text, cx, y, maxW, lineH) {
+    var raw = String(text || '');
+    var tokens = raw.indexOf(' ') >= 0 ? raw.split(' ') : Array.from(raw);
+    var space = raw.indexOf(' ') >= 0;
+    var lines = [];
+    var line = '';
+    tokens.forEach(function (tok) {
+      var test = line ? (space ? line + ' ' + tok : line + tok) : tok;
+      if (ctx.measureText(test).width > maxW && line) {
+        lines.push(line);
+        line = tok;
+      } else line = test;
+    });
+    if (line) lines.push(line);
+    if (!lines.length) lines.push('');
+    lines.forEach(function (ln, i) {
+      var w = ctx.measureText(ln).width;
+      ctx.fillText(ln, cx - w / 2, y + i * lineH);
+    });
+    return y + lines.length * lineH;
+  }
+  function drawCoverImage(ctx, img, x, y, w, h) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.clip();
+    if (img) ctx.drawImage(img, x, y, w, h);
+    else {
+      ctx.fillStyle = C.deep;
+      ctx.fillRect(x, y, w, h);
+    }
+    ctx.restore();
+  }
+  function drawTitleCard(ctx) {
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, VIDEO_W, VIDEO_H);
+    ctx.fillStyle = C.accent;
+    ctx.fillRect(0, 0, VIDEO_W, 8);
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = C.accent;
+    ctx.font = '18px ' + FONT_EN;
+    var kicker = state.lang === 'zh' ? '人物   /   PEOPLE' : 'PEOPLE   /   人物';
+    ctx.fillText(kicker, (VIDEO_W - ctx.measureText(kicker).width) / 2, 96);
+    ctx.strokeStyle = C.accent;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(96, 156);
+    ctx.lineTo(VIDEO_W - 96, 156);
+    ctx.stroke();
+    ctx.fillStyle = C.fg;
+    ctx.font = (state.lang === 'zh' ? '64px ' + FONT_CN : '54px ' + FONT_EN);
+    wrapCenter(ctx, state.name || t('untitled'), VIDEO_W / 2, 210, VIDEO_W - 140, 78);
+    var ages = state.photos.map(function (p) { return Number(p.age); }).filter(function (n) { return isFinite(n); });
+    var min = Math.min.apply(null, ages);
+    var max = Math.max.apply(null, ages);
+    var groups = GROUPS.filter(function (g) {
+      return state.photos.some(function (p) { return groupOf(p.age) && groupOf(p.age).id === g.id; });
+    }).map(function (g) { return state.lang === 'zh' ? g.zh : g.en; }).join('  /  ');
+    ctx.fillStyle = C.muted;
+    ctx.font = '22px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    var meta = state.lang === 'zh'
+      ? (state.photos.length + ' 个阶段  ·  ' + min + '–' + max + ' 岁')
+      : (state.photos.length + ' stages  ·  ' + min + '–' + max + ' yrs');
+    wrapCenter(ctx, meta, VIDEO_W / 2, 430, VIDEO_W - 140, 34);
+    ctx.fillStyle = C.accent;
+    ctx.font = '20px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    wrapCenter(ctx, groups || '—', VIDEO_W / 2, 510, VIDEO_W - 160, 32);
+    ctx.fillStyle = C.muted;
+    ctx.font = '16px ' + FONT_EN;
+    var foot = '人物  ·  PEOPLE';
+    ctx.fillText(foot, (VIDEO_W - ctx.measureText(foot).width) / 2, VIDEO_H - 80);
+  }
+  function drawSlideFrame(ctx, imgs, index, fade) {
+    var next = (index + 1) % imgs.length;
+    var labelIndex = fade >= 0.5 ? next : index;
+    var photo = state.photos[labelIndex];
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, VIDEO_W, VIDEO_H);
+    ctx.fillStyle = C.accent;
+    ctx.fillRect(0, 0, VIDEO_W, 8);
+    ctx.textBaseline = 'top';
+    ctx.font = '16px ' + FONT_EN;
+    ctx.fillStyle = C.accent;
+    ctx.fillText(state.lang === 'zh' ? '人物  /  PEOPLE' : 'PEOPLE  /  人物', 48, 28);
+    var pos = String(labelIndex + 1).padStart(2, '0') + '  /  ' + String(state.photos.length).padStart(2, '0');
+    ctx.fillStyle = C.muted;
+    ctx.font = '16px ' + FONT_EN;
+    ctx.fillText(pos, VIDEO_W - 48 - ctx.measureText(pos).width, 28);
+    var pw = 560, ph = 747, px = (VIDEO_W - pw) / 2, py = 72;
+    ctx.fillStyle = C.deep;
+    ctx.fillRect(px, py, pw, ph);
+    drawCoverImage(ctx, imgs[index], px, py, pw, ph);
+    if (fade > 0 && imgs.length > 1) {
+      ctx.save();
+      ctx.globalAlpha = fade;
+      drawCoverImage(ctx, imgs[next], px, py, pw, ph);
+      ctx.restore();
+    }
+    ctx.strokeStyle = C.line;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(px + 0.5, py + 0.5, pw - 1, ph - 1);
+    var g = groupOf(photo.age);
+    var glabel = g ? (state.lang === 'zh' ? g.zh + '  ' + g.en : g.en + '  ' + g.zh) : '';
+    ctx.fillStyle = C.accent;
+    ctx.font = '18px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    ctx.fillText(glabel, (VIDEO_W - ctx.measureText(glabel).width) / 2, py + ph + 22);
+    var ageStr = String(photo.age);
+    ctx.font = '88px ' + FONT_EN;
+    var ageW = ctx.measureText(ageStr).width;
+    var unit = t('unit');
+    ctx.font = '22px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    var unitW = ctx.measureText(unit).width;
+    var ax = (VIDEO_W - (ageW + 12 + unitW)) / 2;
+    ctx.fillStyle = C.accent;
+    ctx.font = '88px ' + FONT_EN;
+    ctx.fillText(ageStr, ax, py + ph + 52);
+    ctx.font = '22px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    ctx.fillText(unit, ax + ageW + 12, py + ph + 108);
+    ctx.fillStyle = C.fg;
+    ctx.font = '28px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    wrapCenter(ctx, displayTitle(photo), VIDEO_W / 2, py + ph + 168, pw, 38);
+    var barY = VIDEO_H - 88;
+    ctx.fillStyle = C.line;
+    ctx.fillRect(px, barY, pw, 2);
+    var frac = state.photos.length <= 1 ? 1 : labelIndex / (state.photos.length - 1);
+    ctx.fillStyle = C.accent;
+    ctx.fillRect(px, barY, Math.max(4, pw * frac), 2);
+    ctx.fillStyle = C.muted;
+    ctx.font = '15px ' + (state.lang === 'zh' ? FONT_CN : FONT_EN);
+    var nm = state.name || '';
+    ctx.fillText(nm, (VIDEO_W - ctx.measureText(nm).width) / 2, VIDEO_H - 64);
+  }
+  function paintShot(ctx, imgs, shot) {
+    if (shot.kind === 'title') drawTitleCard(ctx);
+    else drawSlideFrame(ctx, imgs, shot.i, shot.fade || 0);
+  }
+  function buildShots() {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var shots = [{ kind: 'title', dur: 1.2 }];
+    var n = state.photos.length;
+    var fadeSteps = reduce || n < 2 ? 0 : 4;
+    var fadeTotal = 0.32;
+    for (var i = 0; i < n; i++) {
+      shots.push({ kind: 'photo', i: i, fade: 0, dur: 1.6 });
+      if (i < n - 1 && fadeSteps) {
+        for (var s = 1; s <= fadeSteps; s++) {
+          shots.push({ kind: 'photo', i: i, fade: s / fadeSteps, dur: fadeTotal / fadeSteps });
+        }
+      }
+    }
+    return shots;
+  }
+  function shotProgress(shot) {
+    if (!shot || shot.kind !== 'photo') return 0;
+    return shot.i + 1;
+  }
+  async function encodeWithMediabunny(canvas, ctx, imgs, shots, onProgress) {
+    if (typeof VideoEncoder === 'undefined') throw new Error('no-webcodecs');
+    var mod = await loadMediabunny();
+    var choices = [
+      { codec: 'avc', ext: 'mp4', mime: 'video/mp4' },
+      { codec: 'vp9', ext: 'webm', mime: 'video/webm' },
+      { codec: 'vp8', ext: 'webm', mime: 'video/webm' },
+      { codec: 'av1', ext: 'mp4', mime: 'video/mp4' },
+      { codec: 'hevc', ext: 'mp4', mime: 'video/mp4' }
+    ];
+    var picked = null;
+    for (var i = 0; i < choices.length; i++) {
+      var ok = false;
+      try { ok = await mod.canEncodeVideo(choices[i].codec, { width: VIDEO_W, height: VIDEO_H }); }
+      catch (err) { ok = false; }
+      if (ok) { picked = choices[i]; break; }
+    }
+    if (!picked) throw new Error('no-codec');
+    var format = picked.ext === 'mp4'
+      ? new mod.Mp4OutputFormat({ fastStart: 'in-memory' })
+      : new mod.WebMOutputFormat();
+    var output = new mod.Output({ format: format, target: new mod.BufferTarget() });
+    var enc = { codec: picked.codec, keyFrameInterval: 2 };
+    if (mod.Quality) enc.quality = new mod.Quality({ bitrate: 2200000 });
+    else enc.bitrate = 2200000;
+    var videoSource = new mod.CanvasSource(canvas, enc);
+    output.addVideoTrack(videoSource);
+    await output.start();
+    var clock = 0;
+    var n = imgs.length;
+    for (var i = 0; i < shots.length; i++) {
+      paintShot(ctx, imgs, shots[i]);
+      await videoSource.add(clock, shots[i].dur);
+      clock += shots[i].dur;
+      if (onProgress) onProgress(Math.min(n, shotProgress(shots[i])), n);
+      await new Promise(function (resolve) { window.setTimeout(resolve, 0); });
+    }
+    await output.finalize();
+    var buffer = output.target.buffer;
+    if (!buffer || !buffer.byteLength) throw new Error('empty');
+    return { blob: new Blob([buffer], { type: picked.mime }), ext: picked.ext };
+  }
+  function pickRecorderMime() {
+    if (!window.MediaRecorder) return '';
+    var list = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+    for (var i = 0; i < list.length; i++) {
+      try { if (MediaRecorder.isTypeSupported(list[i])) return list[i]; } catch (err) { /* ignore */ }
+    }
+    return '';
+  }
+  function encodeWithRecorder(canvas, ctx, imgs, shots, onProgress) {
+    return new Promise(function (resolve, reject) {
+      var mime = pickRecorderMime();
+      if (!mime) { reject(new Error('no-recorder')); return; }
+      var stream = canvas.captureStream(30);
+      var rec;
+      try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 2200000 }); }
+      catch (err) { reject(err); return; }
+      var chunks = [];
+      rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+      rec.onerror = function () { reject(new Error('recorder')); };
+      rec.onstop = function () {
+        stream.getTracks().forEach(function (tr) { tr.stop(); });
+        var type = mime.indexOf('mp4') >= 0 ? 'video/mp4' : 'video/webm';
+        var blob = new Blob(chunks, { type: type });
+        if (!blob.size) reject(new Error('empty'));
+        else resolve({ blob: blob, ext: type === 'video/mp4' ? 'mp4' : 'webm' });
+      };
+      paintShot(ctx, imgs, shots[0]);
+      var total = shots.reduce(function (sum, shot) { return sum + shot.dur; }, 0);
+      var started = 0;
+      rec.start(200);
+      function tick(now) {
+        if (!started) started = now;
+        var elapsed = (now - started) / 1000;
+        var acc = 0;
+        var idx = shots.length - 1;
+        for (var k = 0; k < shots.length; k++) {
+          acc += shots[k].dur;
+          if (elapsed < acc) { idx = k; break; }
+        }
+        paintShot(ctx, imgs, shots[idx]);
+        if (onProgress) onProgress(Math.min(imgs.length, shotProgress(shots[idx])), imgs.length);
+        if (elapsed >= total) { rec.stop(); return; }
+        window.requestAnimationFrame(tick);
+      }
+      window.requestAnimationFrame(tick);
+    });
+  }
+  async function exportVideo() {
+    if (state.exporting || !flags().s4) return;
+    state.exporting = true;
+    var btn = $('btnExportVideo');
+    var pdfBtn = $('btnExport');
+    btn.disabled = true;
+    pdfBtn.disabled = true;
+    btn.textContent = t('exporting');
+    try {
+      var imgs = [];
+      for (var i = 0; i < state.photos.length; i++) imgs.push(await loadOne(state.photos[i].src));
+      var canvas = document.createElement('canvas');
+      canvas.width = VIDEO_W;
+      canvas.height = VIDEO_H;
+      var ctx = canvas.getContext('2d', { alpha: false });
+      var shots = buildShots();
+      var file;
+      function onProgress(done, total) {
+        btn.textContent = t('exporting') + ' ' + done + '/' + total;
+      }
+      try { file = await encodeWithMediabunny(canvas, ctx, imgs, shots, onProgress); }
+      catch (err) { file = await encodeWithRecorder(canvas, ctx, imgs, shots, onProgress); }
+      downloadBlob(file.blob, fileBase() + '.' + file.ext);
+      toast(t('exportedVideo'));
+    } catch (err) {
+      toast(t('exportFail'));
+    } finally {
+      state.exporting = false;
+      btn.disabled = false;
+      pdfBtn.disabled = false;
+      btn.textContent = t('exportVideo');
+      pdfBtn.textContent = t('export');
+    }
+  }
+
+  function onEditInput(e) {
+    var row = e.target.closest('[data-id]');
+    if (!row) return;
+    var photo = state.photos.find(function (p) { return p.id === row.dataset.id; });
+    if (!photo) return;
+    if (e.target.dataset.field === 'age') {
+      photo.age = parseAge(e.target.value);
+      var badge = row.querySelector('[data-group]');
+      if (badge) badge.textContent = groupLine(photo.age);
+      if (!state.manual) sortByAge();
+      renderProgress();
+      if (flags().s4) {
+        renderThumbs();
+        renderGroupBars();
+        renderStage();
+        renderOrder();
+      }
+    } else if (e.target.dataset.field === 'title') {
+      photo.title = e.target.value;
+      if (state.photos[state.index] && state.photos[state.index].id === photo.id) renderStage();
+    }
+  }
+  function onEditChange(e) {
+    if (e.target.dataset.field !== 'age') return;
+    if (!state.manual) sortByAge();
+    renderEditList();
+    renderProgress();
+    renderThumbs();
+    renderGroupBars();
+    renderStage();
+    renderOrder();
+  }
+
+  $('nameInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); commitName(); }
+  });
+  $('nameInput').addEventListener('blur', commitName);
+  $('nameInput').addEventListener('input', renderNameState);
+
+  $('fileInput').addEventListener('change', function () {
+    if ($('fileInput').files && $('fileInput').files.length) addFiles($('fileInput').files);
+    $('fileInput').value = '';
+  });
+  var drop = $('drop');
+  drop.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    drop.classList.add('is-hot');
+  });
+  drop.addEventListener('dragleave', function (e) {
+    if (e.relatedTarget && drop.contains(e.relatedTarget)) return;
+    drop.classList.remove('is-hot');
+  });
+  drop.addEventListener('drop', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    drop.classList.remove('is-hot');
+    if (e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+  document.addEventListener('dragover', function (e) { e.preventDefault(); });
+  document.addEventListener('drop', function (e) { e.preventDefault(); });
+
+  $('editList').addEventListener('input', onEditInput);
+  $('editList').addEventListener('change', onEditChange);
+  $('editList').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.dataset && e.target.dataset.field) {
+      e.preventDefault();
+      e.target.blur();
+    }
+  });
+  $('editList').addEventListener('click', async function (e) {
+    var btn = e.target.closest('[data-remove]');
+    if (!btn) return;
+    var row = btn.closest('[data-id]');
+    if (!row) return;
+    var ok = await askConfirm(t('confirmRemoveTitle'), t('confirmRemoveBody'), t('confirmRemoveOk'), t('cancel'));
+    if (!ok) return;
+    var id = row.dataset.id;
+    var focusId = state.photos[state.index] && state.photos[state.index].id;
+    state.photos = state.photos.filter(function (p) { return p.id !== id; });
+    if (focusId === id) state.index = Math.min(state.index, Math.max(0, state.photos.length - 1));
+    else reindex(focusId);
+    if (!state.manual) sortByAge();
+    renderAll();
+  });
+
+  $('btnPrev').addEventListener('click', function () { goTo(state.index - 1, true); });
+  $('btnNext').addEventListener('click', function () { goTo(state.index + 1, true); });
+  $('btnPlay').addEventListener('click', openPlayer);
+  $('btnExport').addEventListener('click', exportPdf);
+  $('btnExportVideo').addEventListener('click', exportVideo);
+  $('btnSave').addEventListener('click', saveProfile);
+  $('btnSort').addEventListener('click', function () {
+    var focusId = state.photos[state.index] && state.photos[state.index].id;
+    state.manual = false;
+    sortByAge();
+    reindex(focusId);
+    renderEditList();
+    renderThumbs();
+    renderGroupBars();
+    renderStage({ animate: false });
+    renderOrder();
+  });
+
+  var slider = $('slider');
+  slider.addEventListener('input', function () {
+    state.sliderHold = true;
+    var nearest = nearestIndex(slider.value);
+    if (nearest !== state.index) goTo(nearest, true);
+  });
+  slider.addEventListener('change', function () {
+    var nearest = nearestIndex(slider.value);
+    slider.value = String(nearest);
+    state.sliderHold = false;
+    goTo(nearest, true);
+  });
+
+  $('thumbStrip').addEventListener('click', function (e) {
+    var thumb = e.target.closest('.thumb');
+    if (!thumb) return;
+    var i = state.photos.findIndex(function (p) { return p.id === thumb.dataset.id; });
+    if (i >= 0) goTo(i, true);
+  });
+  $('thumbStrip').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('thumb')) {
+      e.preventDefault();
+      e.target.click();
+    }
+  });
+  $('thumbStrip').addEventListener('mousedown', function (e) {
+    var thumb = e.target.closest('.thumb');
+    if (thumb) thumb.setAttribute('draggable', 'true');
+  });
+  $('thumbStrip').addEventListener('dragstart', function (e) {
+    var thumb = e.target.closest('.thumb');
+    if (!thumb) { e.preventDefault(); return; }
+    state.dragId = thumb.dataset.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', state.dragId);
+    thumb.classList.add('is-dragging');
+  });
+  $('thumbStrip').addEventListener('dragend', function () {
+    document.querySelectorAll('.thumb').forEach(function (el) { el.classList.remove('is-dragging', 'is-over'); });
+    state.dragId = null;
+  });
+  $('thumbStrip').addEventListener('dragover', function (e) {
+    if (!state.dragId) return;
+    var thumb = e.target.closest('.thumb');
+    e.preventDefault();
+    document.querySelectorAll('.thumb.is-over').forEach(function (el) { el.classList.remove('is-over'); });
+    if (thumb && thumb.dataset.id !== state.dragId) thumb.classList.add('is-over');
+  });
+  $('thumbStrip').addEventListener('drop', function (e) {
+    e.preventDefault();
+    var thumb = e.target.closest('.thumb');
+    var srcId = state.dragId || (e.dataTransfer && e.dataTransfer.getData('text/plain'));
+    if (thumb && srcId) reorder(srcId, thumb.dataset.id, e.clientX, thumb);
+    else if (srcId) moveToEnd(srcId);
+    document.querySelectorAll('.thumb').forEach(function (el) { el.classList.remove('is-dragging', 'is-over'); });
+  });
+
+  /* 触屏上 HTML5 拖拽不可靠：长按后用指针拖动，逻辑与 drop 相同。 */
+  $('thumbStrip').addEventListener('pointerdown', function (e) {
+    if (e.pointerType !== 'touch') return;
+    var thumb = e.target.closest('.thumb');
+    if (!thumb || !flags().s4) return;
+    var startX = e.clientX, startY = e.clientY, pid = e.pointerId;
+    var armed = false, overEl = null, touchX = startX;
+    var timer = window.setTimeout(function () {
+      armed = true;
+      thumb.classList.add('is-dragging');
+      try { thumb.setPointerCapture(pid); } catch (err) { /* ignore */ }
+    }, 220);
+    function move(ev) {
+      if (ev.pointerId !== pid) return;
+      if (!armed) {
+        if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > 10) {
+          window.clearTimeout(timer);
+          cleanup();
+        }
+        return;
+      }
+      ev.preventDefault();
+      touchX = ev.clientX;
+      var el = document.elementFromPoint(ev.clientX, ev.clientY);
+      var over = el && el.closest ? el.closest('.thumb') : null;
+      document.querySelectorAll('.thumb.is-over').forEach(function (n) { n.classList.remove('is-over'); });
+      if (over && over.dataset.id !== thumb.dataset.id) { over.classList.add('is-over'); overEl = over; }
+      else overEl = null;
+    }
+    function up(ev) {
+      if (ev.pointerId !== pid) return;
+      window.clearTimeout(timer);
+      if (armed) {
+        thumb.classList.remove('is-dragging');
+        document.querySelectorAll('.thumb.is-over').forEach(function (n) { n.classList.remove('is-over'); });
+        if (overEl) reorder(thumb.dataset.id, overEl.dataset.id, touchX, overEl);
+      }
+      cleanup();
+    }
+    function cleanup() {
+      thumb.removeEventListener('pointermove', move);
+      thumb.removeEventListener('pointerup', up);
+      thumb.removeEventListener('pointercancel', up);
+    }
+    thumb.addEventListener('pointermove', move, { passive: false });
+    thumb.addEventListener('pointerup', up);
+    thumb.addEventListener('pointercancel', up);
+  });
+
+  $('btnLib').addEventListener('click', openLib);
+  $('btnLang').addEventListener('click', function () {
+    state.lang = state.lang === 'zh' ? 'en' : 'zh';
+    try { localStorage.setItem('lifeStages_lang', state.lang); } catch (err) { /* ignore */ }
+    renderAll();
+  });
+  $('btnCloseLib').addEventListener('click', closeLib);
+  $('libBack').addEventListener('click', function (e) { if (e.target === $('libBack')) closeLib(); });
+  $('libList').addEventListener('click', function (e) {
+    var del = e.target.closest('[data-del]');
+    if (del) { e.stopPropagation(); deleteProfile(del.dataset.del); return; }
+    var card = e.target.closest('[data-open]');
+    if (card) openProfile(card.dataset.open);
+  });
+  $('btnClearLib').addEventListener('click', async function () {
+    if (!loadProfiles().length) return;
+    var ok = await askConfirm(t('confirmClearTitle'), t('confirmClearBody'), t('confirmClearOk'), t('cancel'));
+    if (!ok) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state.activeProfileId = null;
+    renderLibrary();
+  });
+  $('btnReset').addEventListener('click', async function () {
+    var ok = await askConfirm(t('confirmResetTitle'), t('confirmResetBody'), t('confirmResetOk'), t('cancel'));
+    if (!ok) return;
+    closePlayer();
+    state.name = '';
+    state.photos = [];
+    state.manual = false;
+    state.index = 0;
+    state.activeProfileId = null;
+    state.sliderHold = false;
+    $('nameInput').value = '';
+    var img = $('stageImg');
+    img.removeAttribute('src');
+    delete img.dataset.pid;
+    renderAll();
+  });
+  $('modalOk').addEventListener('click', function () { closeModal(true); });
+  $('modalCancel').addEventListener('click', function () { closeModal(false); });
+  $('modal').addEventListener('click', function (e) { if (e.target === $('modal')) closeModal(false); });
+  $('playerClose').addEventListener('click', closePlayer);
+  $('playerToggle').addEventListener('click', function () {
+    if (state.playing) stopPlay();
+    else startPlay();
+  });
+  $('playerPrev').addEventListener('click', function () { goTo(state.index - 1, true); });
+  $('playerNext').addEventListener('click', function () { goTo(state.index + 1, true); });
+  $('player').addEventListener('click', function (e) { if (e.target === $('player')) closePlayer(); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      if (!$('modal').hidden) { closeModal(false); return; }
+      if (!$('player').hidden) { closePlayer(); return; }
+      if (!$('libBack').hidden) { closeLib(); return; }
+    }
+    if (!$('player').hidden && $('modal').hidden) {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(state.index - 1, true); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); goTo(state.index + 1, true); }
+      else if (e.key === ' ') {
+        var onButton = e.target && e.target.closest && e.target.closest('button');
+        if (onButton) return;
+        e.preventDefault();
+        if (state.playing) stopPlay();
+        else startPlay();
+      }
+      return;
+    }
+    var tag = (e.target.tagName || '').toLowerCase();
+    var typing = tag === 'textarea' || e.target.isContentEditable || (tag === 'input' && e.target.id !== 'slider');
+    if (typing || overlayOpen() || !flags().s4) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(state.index - 1, true); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); goTo(state.index + 1, true); }
+    else if (e.key === ' ') { e.preventDefault(); openPlayer(); }
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
